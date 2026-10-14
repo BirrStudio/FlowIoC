@@ -53,6 +53,26 @@ jobs:
           echo "PACKAGE_VERSION=$package_version" >> "$GITHUB_ENV"
           printf 'Packing %s@%s\n' "$package_name" "$package_version"
 
+      # FlowIoC names no render pipeline. A pipeline among the dependencies, or a pipeline's camera
+      # data, light data or default material in a shipped module, would bring that pipeline into
+      # every project that installs the package - an HDRP game got URP's settings that way. The
+      # host publishes modules without URP's camera and light data; this stops whatever got past.
+      - name: Check that the package names no render pipeline
+        run: |
+          if jq -e '.dependencies // {} | has("com.unity.render-pipelines.universal") or has("com.unity.render-pipelines.high-definition")' package.json > /dev/null; then
+            echo 'package.json depends on a render pipeline' >&2
+            exit 1
+          fi
+
+          # URP's camera and light data and Lit material, then HDRP's camera and light data and
+          # default material.
+          pipeline_guids='a79441f348de89743a2939f4d699eac1|474bcb49853aa07438625e644c072ee6|31321ba15b8f8eb4c954353edc038b1d|23c1ce4fb46143f46bc5cb5224c934f6|7a68c43fe1f2a47cfa234b5eeaa98012|73c176f402d2c2f4d929aa5da7585d17'
+          found="$(grep -rlE "$pipeline_guids" 'Modules~' 'SetupModules~' || true)"
+          if [ -n "$found" ]; then
+            printf 'A shipped module names a render pipeline:\n%s\n' "$found" >&2
+            exit 1
+          fi
+
       # The Package Manager shows a version's notes in Version History only from package.json's
       # _upm.changelog - it never reads CHANGELOG.md - and its Changelog link opens changelogUrl.
       # Both are written into the packed package.json from the tag's own CHANGELOG section, so

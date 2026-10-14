@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** FlowIoC no longer depends on URP, so an HDRP or Built-in project no longer gets URP with it. A URP game whose `Packages/manifest.json` does not list `com.unity.render-pipelines.universal` adds it before updating.
+- The shipped scenes and `CameraServiceRoot` carry no URP camera or light data. Under URP the camera's Post Processing comes back off; turn it on again on the instance in your scene if you used it.
+- An HDRP or Built-in game removes the Missing Script on `MainScene`'s camera and light; install-once modules keep the copy they were installed with.
+- Modules: AB Test Flow 1.1.2, Ads 1.1.1, Analytics 1.1.1, Asset Delivery 1.1.1, Camera 1.1.1, Counter 1.1.1, Device Debugger 1.2.1, Loading 1.2.1, Local Save 1.1.2, Mobile Notification 1.1.1, Resource Fly 1.2.1, World Pointer 1.3.2.
+
 ### Fixed
 
 - "FlowModule is already up to date" reaches the console once when the Editor opens, not twice.

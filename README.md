@@ -70,6 +70,7 @@ can be switched off per project.
 | Minimum Unity | `6000.0` (declared in `package.json`) |
 | Actively developed against | Unity 6 (`6000.3`) |
 | Dependencies | `com.unity.addressables` 2.9.1+, `com.unity.render-pipelines.core` 17.0.0+ (resolved automatically) |
+| Render pipeline | URP, HDRP or Built-in - none of them is a dependency |
 | Assemblies | `FlowIoC` (runtime), `FlowIoC.Editor` (editor) |
 
 ---
