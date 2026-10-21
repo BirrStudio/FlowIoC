@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Loading: a set still running when the module goes - its scene torn down mid-load - ends with it. Its stall watch stops instead of warning 20 s later that the set has heard nothing, and a chain at `ILoadingService.Commands.Await` stops instead of waiting for ever.
+- Loading: a set still running when its module is torn down now ends - no stall warning 20 s later, no `Await` chain waiting for ever.
 
 ## [1.35.0] - 2026-10-14
 
