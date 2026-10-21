@@ -9,11 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Modules: Loading 1.2.2.
+- Modules: Loading 1.2.3.
 
 ### Fixed
 
 - Loading: a set still running when the module goes - its scene torn down mid-load - ends with it. Its stall watch stops instead of warning 20 s later that the set has heard nothing, and a chain at `ILoadingService.Commands.Await` stops instead of waiting for ever.
+- Loading: the loading screen's art loads when Addressables builds content directories (Unity 6.6). It is asked for as the texture's sub-asset, `IList<Sprite>`; asked for as a `Sprite` at the texture's address, content directories threw `InvalidKeyException` and the screen kept its bundled art.
 
 ## [1.35.0] - 2026-10-14
 
