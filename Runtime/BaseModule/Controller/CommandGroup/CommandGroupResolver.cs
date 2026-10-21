@@ -48,8 +48,14 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         /// <summary>The step a warning or an error of a hidden run is about - see <see cref="DescribeStep"/>.</summary>
         private int _describedStep = -1;
+
         private int _completionCount;
         private bool _isDisposed;
+
+        // The run was ended by its binder's context going rather than by its own steps. Such a
+        // resolver is dropped instead of pooled, so this outlives the Dispose that follows and
+        // answers the Release or Stop that work outliving its module sends later.
+        private bool _endedWithContext;
 
         // Whether a driver is already running, and whether something asked it to carry on while it
         // was. A completion that lands mid-step sets the request and returns rather than starting
@@ -129,6 +135,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _executionIndex = 0;
             _completionCount = 0;
             _isDisposed = false;
+            _endedWithContext = false;
             _isStopped = false;
             _isPumping = false;
             _advanceRequested = false;
@@ -194,6 +201,22 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             // finally owns it. Clearing it from a Dispose that landed mid-run would let the next
             // re-entrant call start a second driver on the same instance, which is the one thing
             // the flag exists to prevent. Initialize sets it false for the next run.
+        }
+
+        /// <summary>
+        /// The binder's context is going while this run still waits. Nobody is told it finished: the
+        /// steps behind the waiting one belong to a module that is gone, and so do whoever started
+        /// the run and the parent a sub group would report to.
+        /// </summary>
+        internal void EndWithContext()
+        {
+            if (_isDisposed) return;
+
+            if (!IsHideLog && _parent == null)
+                FlowLogger.Log(SystemLogType.CommandOperation, $"'{RunName}' ended with its context while a step was still running.");
+
+            _endedWithContext = true;
+            Dispose();
         }
 
         #endregion
@@ -301,6 +324,12 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 return;
             }
 
+            if (_endedWithContext)
+            {
+                LogAfterContextEnded("RELEASE", command);
+                return;
+            }
+
             // The step index the dictionary carries is not read here: a hit means this run is still
             // waiting on the command, and the driver knows which step that is.
             if (!_retainedCommands.Remove(command, out _))
@@ -357,6 +386,12 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 return;
             }
 
+            if (_endedWithContext)
+            {
+                LogAfterContextEnded("STOP", command);
+                return;
+            }
+
             if (_isDisposed) return;
 
             if (!_retainedCommands.Remove(command, out CommandStepVO step))
@@ -379,6 +414,18 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             // inside a command's own Execute does not hand the resolver back to the pool while that
             // Execute is still on the stack.
             Pump();
+        }
+
+        /// <summary>
+        /// A plain line, not a warning: the Command did nothing wrong, its module went while it
+        /// waited. What still needs fixing - work that outlives its context - is not this call's.
+        /// </summary>
+        private void LogAfterContextEnded(string call, ICommandBody command)
+        {
+            if (IsHideLog) return;
+
+            FlowLogger.Log(SystemLogType.CommandOperation,
+                $"{call} arrived after its context was torn down, so nothing more runs. Command: {_displayName.Of(command.GetType())}");
         }
 
         #endregion

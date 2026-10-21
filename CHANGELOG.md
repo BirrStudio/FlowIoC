@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A context's command groups still waiting on a retained step end with the context. A late `Release()` used to finish the step and could run another context's steps from the binding the teardown had pooled.
 - Loading: a set still running when its module is torn down now ends - no stall warning 20 s later, no `Await` chain waiting for ever.
 - Loading: a step that keeps reporting after its module is torn down gets one warning instead of an error per report.
 

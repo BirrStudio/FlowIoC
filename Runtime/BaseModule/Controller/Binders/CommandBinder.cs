@@ -27,6 +27,14 @@ namespace FlowIoC.BaseModule.Controller.Binders
         private readonly List<ISignalBody> _ownedSignals = new();
 
         /// <summary>
+        /// Every resolver handed out and not yet back. Unbinding everything is the context going,
+        /// and a run still waiting then is over: its late Release read the binding the unbind had
+        /// pooled, which the next Bind anywhere takes out and fills with its own steps - so the old
+        /// run went on with another context's chain.
+        /// </summary>
+        private readonly HashSet<CommandGroup.CommandGroupResolver> _runningGroups = new();
+
+        /// <summary>
         /// One delegate for the life of the binder. Writing the method group at the subscription
         /// built a new one on every dispatch, which is the kind of allocation a signal that fires
         /// each frame notices.
@@ -110,6 +118,9 @@ namespace FlowIoC.BaseModule.Controller.Binders
 
         public override void UnBindAll()
         {
+            // Before the bindings go back to the pool, while each run can still name its signal.
+            EndRunningGroups();
+
             for (int i = 0; i < _ownedSignals.Count; i++)
                 ReleaseOwnership(_ownedSignals[i]);
 
@@ -214,12 +225,23 @@ namespace FlowIoC.BaseModule.Controller.Binders
 
         internal CommandGroup.CommandGroupResolver GetAvailableGroup()
         {
-            if (_commandGroupPool.TryPop(out CommandGroup.CommandGroupResolver group))
-            {
-                return group;
-            }
+            if (!_commandGroupPool.TryPop(out CommandGroup.CommandGroupResolver group))
+                group = new CommandGroup.CommandGroupResolver();
 
-            return new CommandGroup.CommandGroupResolver();
+            _runningGroups.Add(group);
+            return group;
+        }
+
+        /// <summary>
+        /// Ends every run still waiting, sub groups included. They are dropped rather than pooled,
+        /// so a Release or a Stop that arrives later still finds its run ended.
+        /// </summary>
+        private void EndRunningGroups()
+        {
+            foreach (CommandGroup.CommandGroupResolver group in _runningGroups)
+                group.EndWithContext();
+
+            _runningGroups.Clear();
         }
 
         /// <summary>
@@ -234,6 +256,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             if (groupResolver is not CommandGroup.CommandGroupResolver concrete)
                 return;
 
+            _runningGroups.Remove(concrete);
             concrete.Dispose();
             _commandGroupPool.Push(concrete);
         }
