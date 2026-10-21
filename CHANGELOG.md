@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Loading: a set still running when its module is torn down now ends - no stall warning 20 s later, no `Await` chain waiting for ever.
+- Loading: a step that keeps reporting after its module is torn down gets one warning instead of an error per report.
 
 ## [1.35.0] - 2026-10-14
 

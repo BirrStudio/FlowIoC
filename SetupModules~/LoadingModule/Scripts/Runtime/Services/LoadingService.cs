@@ -20,9 +20,13 @@ namespace Modules.LoadingModule.Services
         [Inject] private ILoadingModel _model { get; set; }
         [InjectSignal] private LoadingInternalSignals _internalSignals { get; set; }
 
+        private bool _tornDownReported;
+
         [HideInCallstack]
         public void Begin(string set)
         {
+            if (IsTornDown($"Begin('{set}')")) return;
+
             if (!_model.TryGetSet(set, out _))
             {
                 FlowLogger.LogError($"Begin('{set}') - CD_LoadingSets declares no set named '{set}'.");
@@ -38,6 +42,8 @@ namespace Modules.LoadingModule.Services
         [HideInCallstack]
         public Task<bool> Await(string set)
         {
+            if (IsTornDown($"Await('{set}')")) return Task.FromResult(false);
+
             if (!_model.TryGetSet(set, out LoadingSetRVO runtime))
             {
                 FlowLogger.LogError($"Await('{set}') - CD_LoadingSets declares no set named '{set}'.");
@@ -55,6 +61,8 @@ namespace Modules.LoadingModule.Services
         [HideInCallstack]
         internal void Submit(LoadingStepReportVO report)
         {
+            if (IsTornDown($"Report('{report.Step}')")) return;
+
             if (!_model.TryGetStep(report.Step, out _))
             {
                 FlowLogger.LogError($"Report('{report.Step}') - CD_LoadingSets lists no step named '{report.Step}' in any set.");
@@ -63,6 +71,22 @@ namespace Modules.LoadingModule.Services
 
             report.Time = Time.realtimeSinceStartup;
             _internalSignals.StepReported.Dispatch(report);
+        }
+
+        /// <summary>
+        /// The module's context is gone, but a step handle held by work that outlived its own module -
+        /// a coroutine on the provider that survives every scene - still calls in. Said once and then
+        /// ignored: the config is not what is wrong, and a line per report buries everything else.
+        /// </summary>
+        [HideInCallstack]
+        private bool IsTornDown(string call)
+        {
+            if (!_model.IsDeconstructed) return false;
+            if (_tornDownReported) return true;
+
+            _tornDownReported = true;
+            FlowLogger.LogWarning($"{call} - the Loading module has been torn down, so this call and every later one is ignored. The work making it outlived its module.");
+            return true;
         }
     }
 }

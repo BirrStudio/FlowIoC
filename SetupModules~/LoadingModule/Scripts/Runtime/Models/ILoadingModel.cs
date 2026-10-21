@@ -16,6 +16,9 @@ namespace Modules.LoadingModule.Models
         IReadOnlyList<LoadingSetRVO> Sets { get; }
         CD_LoadingSets Config { get; }
 
+        /// <summary>The context that bound the model is gone; its sets were let go of with it.</summary>
+        bool IsDeconstructed { get; }
+
         void Load(CD_LoadingSets config);
 
         bool TryGetSet(string set, out LoadingSetRVO runtime);

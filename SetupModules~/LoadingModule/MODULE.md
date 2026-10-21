@@ -33,7 +33,9 @@ ILoadingService.Commands.Await, LoadingSpinner
   awaits a set with `false`. The stall watch runs on the `CoroutineProvider`, which is
   `DontDestroyOnLoad`, and stops only when its set ends: left running, a set torn down with its scene
   kept the watch polling until Play ended and warning that it had heard nothing, and a chain at
-  `ILoadingService.Commands.Await` waiting for ever.
+  `ILoadingService.Commands.Await` waiting for ever. A call that still arrives afterwards - a step
+  whose work outlived its own module - is ignored and said once, as a warning, rather than an
+  error per report that blames the config.
 - **Only a Fullscreen set announces that it began.** `FullscreenBegan` lets the Connector open the
   loading screen without an `if`; `SetChanged`, `SetCompleted` and `SetFailed` reach it for every
   set and its Mediator applies only the set it is showing.
