@@ -60,11 +60,31 @@ namespace Modules.LoadingModule.Models
 
         public void Deconstruct()
         {
+            // Let go first and end after: an awaiter's continuation may run inline, and it finds the module empty.
+            LoadingSetRVO[] dropped = _sets.ToArray();
+
             _sets.Clear();
             _setsByKey.Clear();
             _stepsByKey.Clear();
             _parentsByChildSet.Clear();
             Config = null;
+
+            foreach (LoadingSetRVO set in dropped)
+                Drop(set);
+        }
+
+        /// <summary>
+        /// A set the module lets go of - its context going, or Load reading the asset again - ends here, unannounced:
+        /// one still running ends Failed, so its stall watch, on the coroutine provider that outlives every scene,
+        /// stops; and whoever still awaits it hears false, so a chain at ILoadingService.Commands.Await stops instead
+        /// of waiting for ever.
+        /// </summary>
+        private static void Drop(LoadingSetRVO set)
+        {
+            if (set.State == LoadingSetState.Running)
+                set.State = LoadingSetState.Failed;
+
+            set.Awaiter?.TrySetResult(false);
         }
 
         public void Load(CD_LoadingSets config)

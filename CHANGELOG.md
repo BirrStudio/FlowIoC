@@ -5,6 +5,16 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Modules: Loading 1.2.2.
+
+### Fixed
+
+- Loading: a set still running when the module goes - its scene torn down mid-load - ends with it. Its stall watch stops instead of warning 20 s later that the set has heard nothing, and a chain at `ILoadingService.Commands.Await` stops instead of waiting for ever.
+
 ## [1.35.0] - 2026-10-14
 
 ### Changed
