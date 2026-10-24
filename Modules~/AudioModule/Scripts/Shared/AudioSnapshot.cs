@@ -13,7 +13,7 @@ namespace Modules.AudioModule.Shared
         /// <summary>Music and ambience pulled down so a voice, a popup or a reward reads over them.</summary>
         public static readonly AudioSnapshot Ducked = new("Ducked");
 
-        /// <summary>The game held: music muffled, effects down.</summary>
+        /// <summary>The game held: music and effects pulled down.</summary>
         public static readonly AudioSnapshot Paused = new("Paused");
 
         public readonly string Name;
