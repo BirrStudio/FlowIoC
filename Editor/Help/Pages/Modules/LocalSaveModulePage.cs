@@ -31,7 +31,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Bind ILocalSaveService.Commands.Save as the step after the one that changed the data.",
                 "The asset's name is given at the binding, so the flow reads from the Context: what "
                 + "changed, and that it was written. SaveAll writes everything; the module sends it "
-                + "to itself on pause and on quit."),
+                + "to itself on pause and on quit. ResetAll starts the save over from the shipped "
+                + "values."),
             new HelpTab("Storage", DrawStorage,
                 "One JSON file of the module's own, plain or encrypted with a password.",
                 "SaveFile.flowsave under the persistent data path, one member per asset. The "
@@ -123,7 +124,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "diff behind.");
             painter.Paragraph(
                 "Tick IsTest on LocalSaveServiceRoot to switch the whole thing off for a scene: nothing "
-                + "is read and nothing is written. A build always gets the real service.");
+                + "is read and nothing is written. ResetAll still puts the assets back in memory. A "
+                + "build always gets the real service.");
 
             painter.Separator();
             painter.SubHeading("Trying it");
@@ -170,6 +172,23 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "CommandBinder.Bind(_signals.Incoming.LeaveMatch)\n"
                 + "    .ToSequence<CloseMatchCommand>()\n"
                 + "    .ToSequence<ILocalSaveService.Commands.SaveAll>();");
+
+            painter.Separator();
+            painter.SubHeading("Starting over");
+            painter.Paragraph(
+                "ResetAll puts every filed asset back to the values it shipped with and writes "
+                + "that as the whole save, so the file reads as a fresh install's - a delete-account "
+                + "button, a new game. The module keeps those values itself, taken before the save "
+                + "is read over the assets, so this works in a build too.");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.DeleteAccount)\n"
+                + "    .ToSequence<ILocalSaveService.Commands.ResetAll>()\n"
+                + "    .ToSequence<ReloadSceneCommand>();");
+            painter.Note(
+                "Important: ResetAll resets the assets, not the modules that read them. A Model that "
+                + "copied its values out at startup, and a screen showing them, still hold the old "
+                + "ones and nothing reports it. Reload the scene after the step, so every module "
+                + "rebuilds from the reset assets.");
 
             painter.Separator();
             painter.SubHeading("Reading");
