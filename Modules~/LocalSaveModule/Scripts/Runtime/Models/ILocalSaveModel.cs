@@ -14,6 +14,12 @@ namespace Modules.LocalSaveModule.Models
         /// <summary>Writes every registered asset, flushing once at the end.</summary>
         void SaveAll();
 
+        /// <summary>
+        /// Puts every registered asset back to the values it held before the save was read into it
+        /// - what it shipped with - and writes that as the whole save, flushing once.
+        /// </summary>
+        void ResetAll();
+
 #if UNITY_EDITOR
         /// <summary>
         /// Puts the assets back to what they were before the save file was read into them, so a

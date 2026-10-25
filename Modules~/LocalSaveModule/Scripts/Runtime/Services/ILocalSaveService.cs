@@ -28,6 +28,12 @@ namespace Modules.LocalSaveModule.Services
         /// <summary>Writes a value into the in-memory copy of the file.</summary>
         void Save(string key, object value);
 
+        /// <summary>
+        /// Empties the in-memory copy, so the next Flush writes only what is saved after this -
+        /// a key an older build wrote and nothing files any more goes with the rest.
+        /// </summary>
+        void Clear();
+
         /// <summary>Writes the in-memory copy back to disk. Nothing reaches storage until this runs.</summary>
         void Flush();
 

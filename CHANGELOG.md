@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Local Save: `ILocalSaveService.Commands.ResetAll` puts every filed asset back to the values it shipped with and writes that as the save - for a delete-account button; reload the scene after it.
+
 ### Changed
 
-- Modules: Audio 1.1.1.
+- Modules: Audio 1.1.1, Local Save 1.2.0.
 
 ## [1.35.1] - 2026-10-21
 

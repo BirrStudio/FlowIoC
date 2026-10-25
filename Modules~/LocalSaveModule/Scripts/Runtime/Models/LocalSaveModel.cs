@@ -25,6 +25,8 @@ namespace Modules.LocalSaveModule.Models
 
         private string _password;
 
+        private readonly AssetStartingValues _startingValues = new();
+
 #if UNITY_EDITOR
         private readonly EditorAssetSnapshots _snapshots = new();
 #endif
@@ -43,6 +45,11 @@ namespace Modules.LocalSaveModule.Models
             _snapshots.Capture(_persisted.Values);
             _snapshots.Restore();
 #endif
+
+            // After the Editor's restore and before the load: what the asset holds here is what it
+            // shipped with, in a build and in the Editor alike, and nothing holds it once the load
+            // has run. A reset is put back from this.
+            _startingValues.Capture(_persisted.Values);
 
             _service.BeginSession(_password);
 
@@ -70,6 +77,17 @@ namespace Modules.LocalSaveModule.Models
                 _service.Save(entry.Key, entry.Value);
 
             _service.Flush();
+        }
+
+        public void ResetAll()
+        {
+            _startingValues.Restore();
+
+            // Emptied first, so the file holds the starting values and nothing else - a key an
+            // older build wrote is gone with the rest, the way it is on a fresh install.
+            _service.Clear();
+
+            SaveAll();
         }
 
 #if UNITY_EDITOR

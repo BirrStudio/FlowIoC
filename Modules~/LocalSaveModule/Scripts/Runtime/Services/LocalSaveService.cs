@@ -52,22 +52,7 @@ namespace Modules.LocalSaveModule.Services
         {
             _file = new LocalSaveFile(fileName);
 
-            _serializer = JsonSerializer.Create(new JsonSerializerSettings
-            {
-                ContractResolver = new UnityFieldContractResolver(),
-
-                // A field declared as an interface or a base class writes what it actually holds,
-                // which is what makes a [SerializeReference] field survive the round trip. The
-                // binder decides what such a name is allowed to build.
-                TypeNameHandling = TypeNameHandling.Auto,
-                SerializationBinder = new LocalSaveTypeBinder(),
-
-                // Loading overwrites, so a collection is replaced rather than added to. Without
-                // this an entry the player deleted would come back on every load, for ever.
-                ObjectCreationHandling = ObjectCreationHandling.Replace,
-
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            });
+            _serializer = new LocalSaveSerializer().Serializer;
         }
 
         public void BeginSession(string password)
@@ -122,6 +107,8 @@ namespace Modules.LocalSaveModule.Services
                 Debug.LogError(LOG_PREFIX + "Save" + " failed for '" + key + "'. " + exception);
             }
         }
+
+        public void Clear() => _entries = new JObject();
 
         public void Flush()
         {
