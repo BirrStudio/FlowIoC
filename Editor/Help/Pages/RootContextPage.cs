@@ -113,16 +113,14 @@ namespace FlowIoC.Editor.Help.Pages
             painter.SubHeading("Living past a scene");
             painter.Paragraph(
                 "A Root otherwise lives and dies with its scene. A module whose work outlives one - "
-                + "input, audio, analytics - makes its Root persistent in BeforeCreateContext, which "
-                + "runs just before the context is built. The reparenting is not decoration: Unity "
-                + "marks only root level objects as do not destroy, so a Root authored under "
-                + "something else has to detach itself before it can survive.");
+                + "input, audio, analytics - marks its Root [PersistentRoot]. The framework detaches "
+                + "it and marks it do not destroy before its context is built, and when the scene "
+                + "that authored it is loaded again, the copy it brings stands down: no context, "
+                + "nothing bound, destroyed with everything under it. The Root from the first load "
+                + "keeps its context and its state.");
             painter.Code(
-                "protected override void BeforeCreateContext()\n"
-                + "{\n"
-                + "    transform.SetParent(null);\n"
-                + "    DontDestroyOnLoad(gameObject);\n"
-                + "}");
+                "[PersistentRoot]\n"
+                + "public class LocalSaveServiceRoot : Root<LocalSaveServiceContext> { }");
 
             painter.Separator();
             painter.SubHeading("What Add Sub Context offers");
@@ -331,7 +329,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A Root is normally an empty class. What the module does lives in the Context it names.");
             painter.Bullet("A Root keeps the suffix of what it roots: CounterServiceRoot, PlayerSystemRoot, PlayerTestRoot.");
             painter.Bullet("A GameObject the module needs in the scene is parented to the module's Root.");
-            painter.Bullet("A Root that must outlive its scene detaches itself in BeforeCreateContext before DontDestroyOnLoad.");
+            painter.Bullet("A Root that must outlive its scene is marked [PersistentRoot], never given a DontDestroyOnLoad of its own.");
             painter.Bullet("Setup is the only phase that may reach across modules. The binding phases declare; Launch dispatches.");
             painter.Bullet("InjectionBinder is this Context's own. InjectionBinderCrossContext is the scene's, and every Context shares it.");
             painter.Bullet(

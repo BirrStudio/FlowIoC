@@ -90,18 +90,14 @@ module that has to outlive a scene load — audio, analytics, player profile —
 on its own Root:
 
 ```csharp
-public class AudioRoot : Root<AudioContext>
-{
-    protected override void BeforeCreateContext()
-    {
-        transform.SetParent(null);
-        DontDestroyOnLoad(gameObject);
-    }
-}
+[PersistentRoot]
+public class AudioRoot : Root<AudioContext> { }
 ```
 
-Keep that Root in a bootstrap scene rather than in a prefab that gets spawned:
-nothing stands a second copy down for you, so two instances mean two Contexts.
+The framework detaches the Root and marks it do not destroy before the Context is
+built. A second Root of the same type — the copy a reloaded scene brings back — stands
+down: it builds no Context, binds nothing, and is destroyed with everything under it,
+so the Root from the first load keeps its Context and its state.
 
 The inspector exposes the switches that matter:
 
@@ -716,10 +712,10 @@ console logs `Context Type couldn't find!`. Re-add it from the inspector, or run
 
 ### A second copy of an app-wide module appears
 
-Nothing deduplicates Roots. A Root that calls `DontDestroyOnLoad` and also sits in a
-prefab that gets spawned will exist twice, and each copy builds its own Context and
-registers with the `RootsManager` under the same name. Keep a Root that outlives its
-scene in a bootstrap scene, and nowhere else.
+A Root that calls `DontDestroyOnLoad` itself is never deduplicated: every load of its
+scene builds one more copy, each with its own Context, each binding the same types
+across (`There is a same injection!`) and registering under the same name. Mark the
+Root `[PersistentRoot]` instead, and the copy a reload brings stands down.
 
 ---
 

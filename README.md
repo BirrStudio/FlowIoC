@@ -440,19 +440,16 @@ presence there, so an EventSystem, an adapter, anything the module owns hangs of
 than sitting loose beside it.
 
 A Root otherwise lives and dies with its scene. A module whose work outlives one — input,
-audio, analytics — makes its Root persistent in `BeforeCreateContext`, which runs just before
-the context is built:
+audio, analytics — marks its Root persistent:
 
 ```csharp
-protected override void BeforeCreateContext()
-{
-    transform.SetParent(null);
-    DontDestroyOnLoad(gameObject);
-}
+[PersistentRoot]
+public class AudioRoot : Root<AudioContext> { }
 ```
 
-The reparenting is not decoration: Unity marks only root level objects as do not destroy, so a
-Root authored under something else has to detach itself before it can survive.
+The framework detaches it and marks it do not destroy before the context is built. When the
+scene that authored it is loaded again, the copy it brings stands down - no context, nothing
+bound - and the Root from the first load keeps its context and its state.
 
 ### The boot, and the Loading module
 

@@ -5,6 +5,16 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `[PersistentRoot]` on a Root keeps it for the whole run; the copy a reloaded scene brings stands down instead of building a second context. Replace a Root's own `DontDestroyOnLoad` in `BeforeCreateContext` with it.
+
+### Fixed
+
+- Reloading a scene that holds `AssetServiceRoot`, `LocalSaveServiceRoot`, `AbTestFlowServiceRoot` or `DeviceDebuggerServiceRoot` no longer piles up a second copy binding the same types (`There is a same injection!`).
+
 ## [1.36.0] - 2026-10-26
 
 ### Added

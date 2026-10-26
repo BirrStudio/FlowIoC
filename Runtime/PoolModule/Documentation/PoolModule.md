@@ -430,7 +430,7 @@ on, so a `Get` can hand back the other group's prefab. Either namespace your key
 A `PoolSubContext` entry with `UnregisterWhenRootDestroyed` on tears its groups down
 with its Root. That is usually what you want for a scene loaded on top of another — but
 if the pool must outlive the scene that registered it, leave it off, or list the entry
-on a Root that calls `DontDestroyOnLoad` in `BeforeCreateContext`.
+on a Root marked `[PersistentRoot]`.
 
 ---
 

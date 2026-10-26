@@ -50,6 +50,26 @@ namespace FlowIoC.BaseModule.Root
         public IRoot GetRootByName(string name) =>
             _contextRootMap.TryGetValue(name, out IRoot root) ? root : null;
 
+        /// <summary>
+        /// The registered Root of exactly this type, or null when none is. Asked by a persistent
+        /// Root before it builds its context: a Root of its type already registered is the one the
+        /// run keeps, and the newcomer stands down. A Root destroyed without its OnDestroy - edit
+        /// mode, a test - may still sit in the list, so a dead one is not an answer.
+        /// </summary>
+        internal IRoot GetRootOfType(Type rootType)
+        {
+            foreach (IRoot root in _contextRootList)
+            {
+                if (root is UnityEngine.Object unityObject && unityObject == null)
+                    continue;
+
+                if (root.GetType() == rootType)
+                    return root;
+            }
+
+            return null;
+        }
+
         public void Initialize()
         {
             FlowLogger.Log(SystemLogType.Context, "RootsManager | initialize started");

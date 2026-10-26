@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.ConsoleModule;
+using UnityEngine;
 
 namespace FlowIoC.BaseModule.Root
 {
@@ -22,6 +24,15 @@ namespace FlowIoC.BaseModule.Root
                 return;
 
             _rootsManager = RootsManagerFactory.GetRootsManager() as RootsManager;
+
+            if (IsPersistent)
+            {
+                if (StandDownForLiveTwin())
+                    return;
+
+                Persist();
+            }
+
             CreateContext();
             _rootsManager.Register(this);
         }
@@ -45,6 +56,10 @@ namespace FlowIoC.BaseModule.Root
 
         private void OnApplicationPause(bool pauseStatus)
         {
+            // A Root that stood down lives until the end of its frame with no context to pause.
+            if (_context == null)
+                return;
+
             if (pauseStatus)
                 PauseContext();
             else
@@ -52,6 +67,44 @@ namespace FlowIoC.BaseModule.Root
         }
 
         #endregion
+
+        private bool IsPersistent => GetType().IsDefined(typeof(PersistentRootAttribute), true);
+
+        /// <summary>
+        /// A scene that comes back brings its persistent Root with it, and the one from the first
+        /// load is still alive. Building a second context would bind the same types across twice
+        /// and file the same shared assets twice, so the newcomer goes instead - deactivated first,
+        /// so nothing under it reaches its Start against a Root with no context.
+        /// </summary>
+        private bool StandDownForLiveTwin()
+        {
+            if (_rootsManager.GetRootOfType(GetType()) == null)
+                return false;
+
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | stood down, the persistent one is alive");
+
+            gameObject.SetActive(false);
+
+            if (Application.isPlaying)
+                Destroy(gameObject);
+            else
+                DestroyImmediate(gameObject);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Unity marks only root level objects as do not destroy, so a Root authored under
+        /// something else is detached first. Edit mode has no scene load to survive, and refuses
+        /// DontDestroyOnLoad.
+        /// </summary>
+        private void Persist()
+        {
+            transform.SetParent(null);
+
+            if (Application.isPlaying)
+                DontDestroyOnLoad(gameObject);
+        }
 
         private void CreateContext()
         {

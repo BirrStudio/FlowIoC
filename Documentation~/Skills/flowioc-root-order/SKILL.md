@@ -114,19 +114,20 @@ would work just as well.
 
 ## A Root that outlives its scene, and what a context takes back
 
-A module whose work has to survive a scene load makes its Root persistent in
-`BeforeCreateContext`, which runs just before the context is built:
+A module whose work has to survive a scene load marks its Root `[PersistentRoot]`:
 
 ```csharp
-protected override void BeforeCreateContext()
-{
-    transform.SetParent(null);
-    DontDestroyOnLoad(gameObject);
-}
+[PersistentRoot]
+public class LocalSaveServiceRoot : Root<LocalSaveServiceContext> { }
 ```
 
-The `SetParent` is not decoration. Unity marks only root-level objects as do-not-destroy, so a
-Root authored under something else has to detach itself first.
+Before the context is built the framework detaches the Root and marks it do not destroy. When a
+Root of the same type is already alive - the scene that authored it has been loaded again - the
+newcomer stands down instead: it builds no context, binds and files nothing, and is destroyed with
+everything under it. So a persistent Root can sit in a scene that is reloaded, and the one from the
+first load keeps its context and its state. Never write `DontDestroyOnLoad` in a Root's
+`BeforeCreateContext`: that keeps the Root alive without the stand-down, and every reload piles up
+one more copy binding the same types across.
 
 **A context takes back what it bound across.** `DestroyContext` empties the context's own binder
 and removes from `InjectionBinderCrossContext` everything this context put there - its signal
