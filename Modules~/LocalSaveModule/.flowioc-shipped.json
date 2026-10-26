@@ -36,7 +36,7 @@
     "Scripts/Runtime/RootsContexts/LocalSaveRootAdapter.cs.meta": "f85fa3c01dd4eed7502691977ae49fd6d31a5f28",
     "Scripts/Runtime/RootsContexts/LocalSaveServiceContext.cs": "af4f237734991626ebabc21040564ef8e8ad3208",
     "Scripts/Runtime/RootsContexts/LocalSaveServiceContext.cs.meta": "3bb04c30e99c1f367d86d2261767cd52db371b99",
-    "Scripts/Runtime/RootsContexts/LocalSaveServiceRoot.cs": "1dd4ce293624482d84957b7ea6491800d5b03c8e",
+    "Scripts/Runtime/RootsContexts/LocalSaveServiceRoot.cs": "2f9a3a6f1af64c02d79e51c0243a94eb08737bf4",
     "Scripts/Runtime/RootsContexts/LocalSaveServiceRoot.cs.meta": "76a1b603ad78765b1eab308baaf5202e916fda3e",
     "Scripts/Runtime/Services.meta": "2d6b7a1dcf3b9be5b4a41e1141ebd233f3c94d1b",
     "Scripts/Runtime/Services/DummyLocalSaveService.cs": "985042aa778cce1c9edcd7ea43be3bd287a915e1",

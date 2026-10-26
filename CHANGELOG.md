@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `[PersistentRoot]` on a Root keeps it for the whole run; the copy a reloaded scene brings stands down instead of building a second context. Replace a Root's own `DontDestroyOnLoad` in `BeforeCreateContext` with it.
 
+### Changed
+
+- Modules: A/B Test 1.2.0, Device Debugger 1.3.0, Local Save 1.3.0.
+
 ### Fixed
 
 - Reloading a scene that holds `AssetServiceRoot`, `LocalSaveServiceRoot`, `AbTestFlowServiceRoot` or `DeviceDebuggerServiceRoot` no longer piles up a second copy binding the same types (`There is a same injection!`).

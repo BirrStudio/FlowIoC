@@ -1,21 +1,16 @@
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Root;
 using Modules.AbTestFlowModule.Services;
 
 namespace Modules.AbTestFlowModule.RootsContexts
 {
+    /// <summary>
+    /// Persistent, because surviving is what keeps a scene change from re-rolling a group or
+    /// re-applying an override.
+    /// </summary>
+    [PersistentRoot]
     public class AbTestFlowServiceRoot : Root<AbTestFlowServiceContext>
     {
-        /// <summary>
-        /// Unity marks only root level objects as do not destroy, so a Root authored under
-        /// something else has to detach itself before it can survive a scene load. Surviving is
-        /// what keeps a scene change from re-rolling a group or re-applying an override.
-        /// </summary>
-        protected override void BeforeCreateContext()
-        {
-            transform.SetParent(null);
-            DontDestroyOnLoad(gameObject);
-        }
-
 #if UNITY_EDITOR
         /// <summary>
         /// The Editor keeps whatever a play session wrote into a ScriptableObject, so the originals
