@@ -5,6 +5,12 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Modules: Localization 1.0.0 (new, beta) - the game's texts in every language through Unity Localization: the device's language first, a choice the player saves, `LocalizedText` on labels, and a panel that edits the texts and syncs them with a Google Sheet.
+
 ## [1.37.0] - 2026-10-26
 
 ### Added

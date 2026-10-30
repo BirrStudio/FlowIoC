@@ -1,0 +1,24 @@
+{
+  "name": "Modules.Localization",
+  "references": [
+    "FlowIoC",
+    "FlowIoC.Editor",
+    "Modules.Localization.Signals",
+    "Unity.Localization",
+    "Unity.Localization.Editor",
+    "Unity.ResourceManager",
+    "Unity.Addressables",
+    "Unity.TextMeshPro"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Unity.Localization.ThirdParty.Editor.dll"
+  ],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
