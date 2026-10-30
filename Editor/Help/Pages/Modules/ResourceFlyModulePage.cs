@@ -85,7 +85,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Note(
                 "It is a Service, so another module references Modules.ResourceFly and injects "
                 + "IResourceFlyService directly. It plays no sound, no haptic and no particle: the counter raises "
-                + "FlightStarted, Landed and FlightEnded, and the screen that hosts it binds what "
+                + "FlightStarted, Approaching, Landed and FlightEnded, and the screen that hosts it binds what "
                 + "should play.");
 
             painter.Separator();
@@ -244,6 +244,13 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "top bar that slides in for the flight slides out on it. A flight starting before "
                 + "FlightEnded continues the same stretch, and the end goes to the counter the flight "
                 + "began on. A listener that throws is logged and the icons land anyway.");
+            painter.Paragraph(
+                "Approaching comes with every icon too, a moment before it lands - its motion's Landing "
+                + "Lead Seconds before. A phone plays a sound a little after it is asked to, so a landing "
+                + "sound or haptic bound to Landed is felt late; bound to Approaching with a lead of about "
+                + "0.1 seconds, it is heard as the icon lands. The count and the landing still play on "
+                + "Landed. With a lead of 0, as the motions ship, Approaching comes on the landing frame, "
+                + "just before Landed. An icon lost after its Approaching has had its sound.");
         }
 
         private void DrawMotions(HelpPainter painter)
@@ -264,7 +271,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "Every motion also carries a Scale Curve: the icon's size over the whole flight, from 0 "
                 + "at the source to 1 on the target. Flat at 1, as it ships, it leaves the size alone; "
-                + "shape it to grow an icon as it bursts out or shrink it into the counter.");
+                + "shape it to grow an icon as it bursts out or shrink it into the counter. Its Landing "
+                + "Lead Seconds raises the counter's Approaching that long before each icon lands.");
 
             painter.Separator();
             painter.SubHeading("A motion of your own");

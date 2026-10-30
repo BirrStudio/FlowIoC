@@ -24,6 +24,7 @@ namespace Modules.ResourceFlyModule.Entities
         private Vector3 _from;
         private int _seed;
         private RectTransform _target;
+        private Action _approach;
         private Action<bool> _done;
 
         internal bool IsFlying { get; private set; }
@@ -50,13 +51,18 @@ namespace Modules.ResourceFlyModule.Entities
             _image.sprite = sprite != null ? sprite : _ownSprite;
         }
 
-        /// <summary>Starts the icon; done(true) when it reaches the target, done(false) if it is lost before.</summary>
-        public void Launch(Vector3 from, RectTransform target, CD_ResourceFlyMotion motion, float delay, Action<bool> done)
+        /// <summary>
+        /// Starts the icon; done(true) when it reaches the target, done(false) if it is lost before.
+        /// approach runs once, the motion's LandingLeadSeconds before the landing - with 0, just before done(true).
+        /// </summary>
+        public void Launch(Vector3 from, RectTransform target, CD_ResourceFlyMotion motion, float delay, Action<bool> done,
+            Action approach = null)
         {
             _from = from;
             _target = target;
             Motion = motion;
             _done = done;
+            _approach = approach;
             _seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
             transform.position = from;
@@ -75,14 +81,20 @@ namespace Modules.ResourceFlyModule.Entities
 
             _clock += deltaTime;
 
-            if (_clock < 0f)
-                return;
-
             if (_target == null)
             {
-                Finish(false);
+                if (_clock >= 0f)
+                    Finish(false);
+
                 return;
             }
+
+            // Checked while the icon still waits its turn too: a lead longer than the flight is heard before it leaves.
+            if (_approach != null && _clock >= Motion.Seconds - Motion.LandingLeadSeconds)
+                TakeApproach().Invoke();
+
+            if (_clock < 0f)
+                return;
 
             float seconds = Motion.Seconds;
             float t = seconds <= 0f ? 1f : Mathf.Clamp01(_clock / seconds);
@@ -124,9 +136,17 @@ namespace Modules.ResourceFlyModule.Entities
 
         private void Report(bool arrived) => TakeDone()?.Invoke(arrived);
 
+        private Action TakeApproach()
+        {
+            Action approach = _approach;
+            _approach = null;
+            return approach;
+        }
+
         private Action<bool> TakeDone()
         {
             IsFlying = false;
+            _approach = null;
             Action<bool> done = _done;
             _done = null;
             return done;

@@ -5,6 +5,12 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Modules: Resource Fly 1.2.2 - a motion's `LandingLeadSeconds` raises the counter's new `Approaching` event that long before each icon lands, so a landing sound or haptic bound to it is heard on time.
+
 ## [1.38.0] - 2026-10-30
 
 ### Added

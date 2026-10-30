@@ -14,6 +14,12 @@ namespace Modules.ResourceFlyModule.Data.UnityObjects
         [Tooltip("The icon's scale over the whole flight, 0 at the source and 1 on the target. Flat at 1 leaves its size alone.")]
         public AnimationCurve ScaleCurve = AnimationCurve.Constant(0f, 1f, 1f);
 
+        [Min(0f)]
+        [Tooltip("How many seconds before an icon lands the counter raises Approaching - a sound or a haptic bound to it is "
+                 + "heard on time despite the phone's audio delay. The count and the landing still play on arrival. "
+                 + "0 raises Approaching on arrival, just before Landed.")]
+        public float LandingLeadSeconds;
+
         /// <summary>Seconds one icon takes from leaving the source to landing.</summary>
         public abstract float Seconds { get; }
 

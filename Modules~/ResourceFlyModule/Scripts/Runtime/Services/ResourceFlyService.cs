@@ -220,7 +220,22 @@ namespace Modules.ResourceFlyModule.Services
                 ReportSpriteFault(flight, icon);
 
             icon.ShowSprite(flight.Look.Sprite);
-            icon.Launch(source.position, counter.Target, flight.Look.Motion, delay, arrived => Land(flight, share, arrived));
+            icon.Launch(source.position, counter.Target, flight.Look.Motion, delay, arrived => Land(flight, share, arrived),
+                () => Approach(flight));
+        }
+
+        /// <summary>An icon is its motion's lead from landing: the counter raises Approaching for the screen's sound and haptic.</summary>
+        private void Approach(ResourceFlightVO flight)
+        {
+            try
+            {
+                Alive(flight.Resource.Counter)?.Approach();
+            }
+            catch (Exception exception)
+            {
+                // A screen's Approaching listener - a sound, a haptic - does not hold the flight.
+                FlowLogger.LogError($"Fly - {flight.Resource.Key}: the counter's Approaching threw, the flight goes on: {exception}");
+            }
         }
 
         /// <summary>Once per flight, on the icon so a double-click opens its prefab; the icon flies with its own picture.</summary>

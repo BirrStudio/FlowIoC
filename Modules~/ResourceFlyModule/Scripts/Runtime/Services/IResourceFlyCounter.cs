@@ -36,6 +36,12 @@ namespace Modules.ResourceFlyModule.Services
         /// <summary>An icon arrived: count up to the value over countUpSeconds and play the landing, if there is one.</summary>
         void Land(int value, float countUpSeconds, CD_ResourceFlyLanding landing);
 
+        /// <summary>
+        /// An icon is its motion's LandingLeadSeconds from landing - with 0, it is landing this frame,
+        /// just before Land. Called once per icon, and not again if the icon is lost after it.
+        /// </summary>
+        void Approach() { }
+
         void BeginFlight();
         void EndFlight();
     }

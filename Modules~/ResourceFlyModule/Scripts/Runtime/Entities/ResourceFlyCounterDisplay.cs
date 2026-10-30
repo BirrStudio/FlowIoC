@@ -12,7 +12,7 @@ namespace Modules.ResourceFlyModule.Entities
     /// The ready counter: put it on a screen beside the counter's icon, with the icons' parent just
     /// below the icon in the hierarchy so they pass under it and its landing is seen over them, and
     /// register it from the Command that opens the screen. It counts up to each landing's value and
-    /// plays a landing on the icon - a punch, a flash; its three events are for the screen - a
+    /// plays a landing on the icon - a punch, a flash; its four events are for the screen - a
     /// badge to slide in, a haptic, a sound, a particle.
     /// </summary>
     public class ResourceFlyCounterDisplay : MonoBehaviour, IResourceFlyCounter
@@ -60,6 +60,10 @@ namespace Modules.ResourceFlyModule.Entities
         private bool _restRead;
 
         public event Action FlightStarted;
+
+        /// <summary>An icon is its motion's LandingLeadSeconds from landing: bind a sound or a haptic here to be heard on time.</summary>
+        public event Action Approaching;
+
         public event Action Landed;
         public event Action FlightEnded;
 
@@ -100,6 +104,8 @@ namespace Modules.ResourceFlyModule.Entities
 
             Landed?.Invoke();
         }
+
+        public void Approach() => Approaching?.Invoke();
 
         public void BeginFlight()
         {
