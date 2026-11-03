@@ -24,6 +24,7 @@ namespace Modules.ResourceFlyModule.Entities
         private Vector3 _from;
         private int _seed;
         private RectTransform _target;
+        private Action _depart;
         private Action _approach;
         private Action<bool> _done;
 
@@ -54,15 +55,18 @@ namespace Modules.ResourceFlyModule.Entities
         /// <summary>
         /// Starts the icon; done(true) when it reaches the target, done(false) if it is lost before.
         /// approach runs once, the motion's LandingLeadSeconds before the landing - with 0, just before done(true).
+        /// depart runs once, on the frame the delay has run out and the icon starts moving - not on Launch, and
+        /// never for an icon lost before it leaves.
         /// </summary>
         public void Launch(Vector3 from, RectTransform target, CD_ResourceFlyMotion motion, float delay, Action<bool> done,
-            Action approach = null)
+            Action approach = null, Action depart = null)
         {
             _from = from;
             _target = target;
             Motion = motion;
             _done = done;
             _approach = approach;
+            _depart = depart;
             _seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
             transform.position = from;
@@ -88,6 +92,9 @@ namespace Modules.ResourceFlyModule.Entities
 
                 return;
             }
+
+            if (_depart != null && _clock >= 0f)
+                TakeDepart().Invoke();
 
             // Checked while the icon still waits its turn too: a lead longer than the flight is heard before it leaves.
             if (_approach != null && _clock >= Motion.Seconds - Motion.LandingLeadSeconds)
@@ -136,6 +143,13 @@ namespace Modules.ResourceFlyModule.Entities
 
         private void Report(bool arrived) => TakeDone()?.Invoke(arrived);
 
+        private Action TakeDepart()
+        {
+            Action depart = _depart;
+            _depart = null;
+            return depart;
+        }
+
         private Action TakeApproach()
         {
             Action approach = _approach;
@@ -146,6 +160,7 @@ namespace Modules.ResourceFlyModule.Entities
         private Action<bool> TakeDone()
         {
             IsFlying = false;
+            _depart = null;
             _approach = null;
             Action<bool> done = _done;
             _done = null;

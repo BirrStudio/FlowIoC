@@ -37,6 +37,12 @@ namespace Modules.ResourceFlyModule.Services
         void Land(int value, float countUpSeconds, CD_ResourceFlyLanding landing);
 
         /// <summary>
+        /// An icon has waited its turn and leaves the source this frame. Called once per icon, and never
+        /// for an icon lost before it leaves.
+        /// </summary>
+        void Depart() { }
+
+        /// <summary>
         /// An icon is its motion's LandingLeadSeconds from landing - with 0, it is landing this frame,
         /// just before Land. Called once per icon, and not again if the icon is lost after it.
         /// </summary>

@@ -221,7 +221,21 @@ namespace Modules.ResourceFlyModule.Services
 
             icon.ShowSprite(flight.Look.Sprite);
             icon.Launch(source.position, counter.Target, flight.Look.Motion, delay, arrived => Land(flight, share, arrived),
-                () => Approach(flight));
+                () => Approach(flight), () => Depart(flight));
+        }
+
+        /// <summary>An icon leaves the source: the counter raises Departed for the screen's pop, one per icon.</summary>
+        private void Depart(ResourceFlightVO flight)
+        {
+            try
+            {
+                Alive(flight.Resource.Counter)?.Depart();
+            }
+            catch (Exception exception)
+            {
+                // A screen's Departed listener - a sound, a haptic - does not hold the flight.
+                FlowLogger.LogError($"Fly - {flight.Resource.Key}: the counter's Departed threw, the flight goes on: {exception}");
+            }
         }
 
         /// <summary>An icon is its motion's lead from landing: the counter raises Approaching for the screen's sound and haptic.</summary>

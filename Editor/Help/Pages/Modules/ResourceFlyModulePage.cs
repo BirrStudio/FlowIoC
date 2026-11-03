@@ -85,7 +85,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Note(
                 "It is a Service, so another module references Modules.ResourceFly and injects "
                 + "IResourceFlyService directly. It plays no sound, no haptic and no particle: the counter raises "
-                + "FlightStarted, Approaching, Landed and FlightEnded, and the screen that hosts it binds what "
+                + "FlightStarted, Departed, Approaching, Landed and FlightEnded, and the screen that hosts it binds what "
                 + "should play.");
 
             painter.Separator();
@@ -244,6 +244,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "top bar that slides in for the flight slides out on it. A flight starting before "
                 + "FlightEnded continues the same stretch, and the end goes to the counter the flight "
                 + "began on. A listener that throws is logged and the icons land anyway.");
+            painter.Paragraph(
+                "Departed comes with every icon as it leaves the source - when its turn in the stagger "
+                + "comes and it starts moving, not when the flight is launched - so a pop bound to it "
+                + "plays once per coin bursting out. An icon lost while it still waits its turn never "
+                + "departs.");
             painter.Paragraph(
                 "Approaching comes with every icon too, a moment before it lands - its motion's Landing "
                 + "Lead Seconds before. A phone plays a sound a little after it is asked to, so a landing "
