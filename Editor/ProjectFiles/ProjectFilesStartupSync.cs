@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using FlowIoC.Editor.AgentRules;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace FlowIoC.Editor.ProjectFiles
@@ -18,6 +19,19 @@ namespace FlowIoC.Editor.ProjectFiles
     internal static class ProjectFilesStartupHook
     {
         static ProjectFilesStartupHook()
+        {
+            Schedule();
+
+            // The first tick after an in-place update can still see the old PackageInfo, and then
+            // finds nothing to do. The Package Manager says when the new one is registered; run
+            // again then, the way the agent rules do.
+            Events.registeredPackages -= OnRegisteredPackages;
+            Events.registeredPackages += OnRegisteredPackages;
+        }
+
+        private static void OnRegisteredPackages(PackageRegistrationEventArgs args) => Schedule();
+
+        private static void Schedule()
         {
             EditorApplication.update -= RunOnce;
             EditorApplication.update += RunOnce;

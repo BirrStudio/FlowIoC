@@ -3,6 +3,7 @@
 using System.IO;
 using FlowIoC.Editor.AgentRules;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace FlowIoC.Editor.CodeStyle
@@ -20,6 +21,18 @@ namespace FlowIoC.Editor.CodeStyle
     {
         [InitializeOnLoadMethod]
         private static void OnProjectLoad()
+        {
+            Schedule();
+
+            // The first tick after an in-place update can still see the old resolved path, which
+            // the session already answered for. Run again once the new package is registered.
+            Events.registeredPackages -= OnRegisteredPackages;
+            Events.registeredPackages += OnRegisteredPackages;
+        }
+
+        private static void OnRegisteredPackages(PackageRegistrationEventArgs args) => Schedule();
+
+        private static void Schedule()
         {
             EditorApplication.update -= Run;
             EditorApplication.update += Run;
