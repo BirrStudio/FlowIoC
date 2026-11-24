@@ -1,5 +1,6 @@
 using System;
 using FlowIoC.BaseModule.Signals;
+using Modules.LocalizationModule.Data.ValueObjects;
 
 namespace Modules.LocalizationModule.Signals
 {
@@ -14,5 +15,8 @@ namespace Modules.LocalizationModule.Signals
     {
         public Signal<Action> Initialize = new();
         public Signal<string, Action> SetLanguage = new();
+
+        /// <summary>What one look at the published sheet came back with, failure included.</summary>
+        public Signal<RemoteDownloadVO> RemoteTextsArrived = new();
     }
 }

@@ -5,6 +5,21 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.38.4] - 2026-11-24
+
+### Added
+
+- Localization: phones read corrected texts from the published Google Sheet without a new build - next launch by default, Wait at boot as an option; an unread machine translation never reaches them. Press Set up once more in a project set up before.
+
+### Changed
+
+- Modules: Localization 1.1.0.
+- Help updated.
+
+### Fixed
+
+- Localization panel: Add language, New key and Link clear their field.
+
 ## [1.38.3] - 2026-11-24
 
 ### Changed

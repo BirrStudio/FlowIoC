@@ -36,7 +36,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             new HelpTab("Sheet", DrawSheet,
                 "The day-to-day loop: write in English, Push, let the sheet translate, Pull, Approve.",
                 "The sheet is where texts are written and translated; the table is the game's copy. Each "
-                + "button compares both with what they last agreed on, so only a text changed on both sides is asked about.")
+                + "button compares both with what they last agreed on, so only a text changed on both sides is asked about."),
+            new HelpTab("Phones", DrawPhones,
+                "Corrected texts reach a shipped game from the published sheet, without a build.",
+                "Optional. A phone reads one number at launch and downloads the texts only when it changed; "
+                + "an unread machine translation never reaches it.")
         };
 
         public override string InstalledHint =>
@@ -131,14 +135,17 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "keeps its settings. The tables are the game's texts and live outside the module's folder, "
                 + "so updating or deleting the module never touches a translation.");
             painter.Image(_images.Get("LocalizationPanel.png"),
-                "The Localization panel: the languages, the sheet, and every key in every language.");
-            painter.Paragraph("After Set up the panel has three parts, top to bottom:");
+                "The Localization panel: the languages, the sheet, what phones read, and every key in every language.");
+            painter.Paragraph("After Set up the panel has four parts, top to bottom:");
             painter.Bullet(
                 "Languages - each language with how many of its texts are missing. Add language takes a "
                 + "locale code (de, ja, ar, zh-Hans) and gives it a column in the Game table.");
             painter.Bullet(
                 "Google Sheet - which sheet the table syncs with, and Pull, Push and Approve all. Until step 5 "
                 + "is done it says so in a yellow bar and its sheet buttons stay grey.");
+            painter.Bullet(
+                "Phones - the revision phones compare, and the published address they read corrected texts "
+                + "from. Optional; the Phones tab has the steps.");
             painter.Bullet(
                 "Texts - every key in every language, each cell editable in place: type and press Enter, or "
                 + "click away. Search matches a key or a text; Show narrows the list to Missing or Unchecked; "
@@ -288,7 +295,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "One tab: Key in column A, a language code over every column after it - en, tr, de. Every row "
                 + "under it is a key. Push writes the header and adds a language's column the first time it is "
-                + "needed.");
+                + "needed. It also keeps a Status column, listing the languages of each row that are still unread "
+                + "machine translations, a \"Revision N\" header after it, and a small Version tab holding the "
+                + "same number. All three are for phones - see the Phones tab - and Pull ignores them.");
 
             painter.Separator();
             painter.SubHeading("Pull and Push");
@@ -312,6 +321,71 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "text cannot be kept empty in one language through the sheet. A GOOGLETRANSLATE cell is also "
                 + "recomputed by the sheet now and then and may come back slightly different - approve what is "
                 + "good so it stops moving.");
+        }
+
+        private void DrawPhones(HelpPainter painter)
+        {
+            painter.SubHeading("What it does");
+            painter.Paragraph(
+                "A shipped game reads its texts from the tables in its build. Linked to the published sheet, a "
+                + "phone also looks at the sheet at launch and puts the corrected texts over the built ones, so a "
+                + "typo is fixed without a new build. Only a key the build already has is corrected, and only when "
+                + "its placeholders - {0}, {count} - are the same as the built text's. A new key or a new language "
+                + "still ships in a build.");
+
+            painter.Separator();
+            painter.Image(_images.Get("LocalizationPanel.png"),
+                "The panel's Phones part, under Google Sheet: the revision, the published address, Link published and Check now.");
+
+            painter.Separator();
+            painter.SubHeading("Turning it on");
+            painter.Bullet("Push once. It writes the Status column and makes the Version tab.");
+            painter.Bullet(
+                "In the sheet: File > Share > Publish to web, Entire document, Comma-separated values (.csv), "
+                + "Publish. Copy the address it shows.");
+            painter.Bullet(
+                "In the panel's Phones part, paste it into Published address and press Link published. The panel "
+                + "checks that the Game tab and the Version tab both answer.");
+            painter.Bullet("Choose how often a phone looks - Check - and build the game.");
+            painter.Note(
+                "Important: a project set up before phones could read the sheet shows \"Press Set up once more\" "
+                + "in the Phones part. Set up adds what a phone needs to the settings asset and changes nothing "
+                + "else.");
+
+            painter.Separator();
+            painter.SubHeading("How often a phone looks");
+            painter.Table(new[] {"Check", "What it costs a player"},
+                new[] {"Never", "Nothing. The phone reads only its build - the default."},
+                new[] {"Always", "A few bytes every launch; the texts download only when the revision changed."},
+                new[] {"Daily", "The same, at most once a day."},
+                new[] {"Weekly", "The same, at most once a week."});
+            painter.Paragraph(
+                "A look that fails - no network - counts as a look and is a warning, never an error; the phone "
+                + "keeps what it had.");
+
+            painter.Separator();
+            painter.SubHeading("When a correction shows");
+            painter.Paragraph(
+                "By default on the next launch: boot never waits, and the download is kept on the phone for the "
+                + "next start. With Wait at boot on, boot waits up to Wait seconds and a download that arrives in "
+                + "time is on screen at once - the loading screen's own labels may change once while it is up. "
+                + "A new build forgets every download made under the version before it, so its own texts win.");
+            painter.Paragraph(
+                "Nothing is applied in the Editor, Play included: there a table is the asset itself, and a "
+                + "correction saved into it would go back to the sheet with the next Push. Check now in the panel "
+                + "says what a phone would take, and a device is where it is seen.");
+
+            painter.Separator();
+            painter.SubHeading("What a phone never takes");
+            painter.Paragraph(
+                "A language listed in a row's Status: an unread machine translation. Pull, Push and Approve keep "
+                + "Status right; a machine translation becomes a person's when it is edited or approved.");
+            painter.Note(
+                "Important: a fix made in the sheet by hand reaches no phone by itself. Run Pull then Push in the "
+                + "panel: it raises the revision and keeps Status right. By hand it is three edits - the number in "
+                + "A1 of the Version tab and the one in the Game tab's \"Revision N\" header, both raised to the same "
+                + "value, and the language removed from the row's Status if you replaced a machine translation. A "
+                + "phone keeps a download only when the two numbers agree.");
         }
     }
 }

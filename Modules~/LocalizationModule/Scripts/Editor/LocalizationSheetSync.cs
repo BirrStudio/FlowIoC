@@ -2,12 +2,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Modules.LocalizationModule.Constants;
 using Modules.LocalizationModule.Data.UnityObjects;
 using Modules.LocalizationModule.Data.ValueObjects;
+using Modules.LocalizationModule.Remote;
 using UnityEditor;
 using UnityEditor.Localization.Plugins.Google;
 
@@ -46,6 +48,11 @@ namespace Modules.LocalizationModule.Editor
         private readonly LocalizationTableTools _tables;
         private readonly LocalizationSheetMerge _merge = new();
         private readonly SheetAddress _address = new();
+        private readonly RemoteCsv _csv = new();
+        private readonly RemoteTextsValidator _validator = new();
+
+        /// <summary>The tab whose A1 holds the revision phones compare before downloading the table.</summary>
+        private const string VERSION_TAB = "Version";
 
         public LocalizationSheetSync(LocalizationProject project, LocalizationTableTools tables)
         {
@@ -142,6 +149,7 @@ namespace Modules.LocalizationModule.Editor
 
             Write(sheet, writes, "RAW");
             Save(sheet);
+            PublishForPhones(sheet, writes.Count > 0);
             Report = $"Approved {writes.Count} text(s).";
         }
 
@@ -274,6 +282,9 @@ namespace Modules.LocalizationModule.Editor
             Remember(sheet, synced, local, remote, pull ? present : languages);
             _tables.Save();
             Save(sheet);
+
+            if (!pull)
+                PublishForPhones(sheet, raw.Count + formulas.Count + deletes.Count > 0);
 
             Report = pull
                 ? $"Pulled {toLocal} change(s) into the table" + (asked > 0 ? $", {asked} asked about." : ".")
@@ -440,6 +451,19 @@ namespace Modules.LocalizationModule.Editor
             {
                 string code = header[column]?.ToString().Trim();
 
+                // What phones read to tell a checked text from an unread one; it is no language.
+                if (code == RemoteTextsValidator.STATUS_HEADER)
+                {
+                    remote.StatusColumn = column;
+                    continue;
+                }
+
+                if (code != null && code.StartsWith(RemoteTextsValidator.REVISION_HEADER, StringComparison.Ordinal))
+                {
+                    remote.RevisionColumn = column;
+                    continue;
+                }
+
                 if (!string.IsNullOrEmpty(code) && !remote.Columns.ContainsKey(code))
                     remote.Columns[code] = column;
             }
@@ -468,6 +492,9 @@ namespace Modules.LocalizationModule.Editor
 
                 remote.Rows[key] = row;
                 remote.Grid[key] = new Dictionary<string, string>();
+
+                if (remote.StatusColumn >= 0)
+                    remote.Status[key] = At(values[row], remote.StatusColumn).Trim();
 
                 foreach (KeyValuePair<string, int> column in remote.Columns)
                 {
@@ -575,6 +602,183 @@ namespace Modules.LocalizationModule.Editor
             Service().Spreadsheets.BatchUpdate(new BatchUpdateSpreadsheetRequest { Requests = requests }, sheet.SpreadsheetId).Execute();
         }
 
+        // --- what phones read ---
+
+        /// <summary>
+        /// Writes each row's unread languages into Status and, when that or the pass changed
+        /// anything, raises the revision phones compare against. The sheet is read afresh: rows the
+        /// pass deleted have moved every row below them, and a cell this pass filled with a
+        /// formula is unread whatever the agreement says. The new number goes into the Game tab's
+        /// own Revision header in the same write as Status, and into the Version tab last, so a
+        /// phone that sees the new number in one tab and the old one in the other keeps nothing.
+        /// </summary>
+        private void PublishForPhones(ED_LocalizationSheet sheet, bool wroteTexts)
+        {
+            RemoteSheet remote = Read(sheet);
+            var raw = new List<ValueRange>();
+            var unread = new Dictionary<string, SortedSet<string>>();
+
+            void Unread(string key, string language)
+            {
+                if (!unread.TryGetValue(key, out SortedSet<string> set))
+                    unread[key] = set = new SortedSet<string>(StringComparer.Ordinal);
+                set.Add(language);
+            }
+
+            foreach ((string key, string language) in Unchecked())
+                Unread(key, language);
+
+            foreach ((string key, string language) in remote.Formulas)
+                Unread(key, language);
+
+            foreach ((string key, string language) in remote.Pending)
+                Unread(key, language);
+
+            if (remote.StatusColumn < 0)
+            {
+                remote.StatusColumn = remote.Width++;
+                raw.Add(Cell(remote.Title, 0, remote.StatusColumn, RemoteTextsValidator.STATUS_HEADER));
+            }
+
+            foreach (KeyValuePair<string, int> row in remote.Rows)
+            {
+                string status = unread.TryGetValue(row.Key, out SortedSet<string> languages) ? string.Join(", ", languages) : string.Empty;
+                remote.Status.TryGetValue(row.Key, out string was);
+
+                if (status != (was ?? string.Empty))
+                    raw.Add(Cell(remote.Title, row.Value, remote.StatusColumn, status));
+            }
+
+            if (raw.Count == 0 && !wroteTexts)
+                return;
+
+            int sheetId = VersionTab(sheet);
+            int revision = ReadRevision(sheet) + 1;
+
+            if (remote.RevisionColumn < 0)
+                remote.RevisionColumn = remote.Width++;
+
+            raw.Add(Cell(remote.Title, 0, remote.RevisionColumn, RemoteTextsValidator.REVISION_HEADER + revision));
+
+            Grow(sheet, remote);
+            Write(sheet, raw, "RAW");
+            Write(sheet, new List<ValueRange> { Cell(VERSION_TAB, 0, 0, revision.ToString()) }, "RAW");
+
+            Undo.RecordObject(sheet, "Localization sheet");
+            sheet.VersionSheetId = sheetId;
+            sheet.Revision = revision;
+            Save(sheet);
+        }
+
+        /// <summary>The Version tab's gid; the tab is made on the first pass that needs it.</summary>
+        private int VersionTab(ED_LocalizationSheet sheet)
+        {
+            SheetsService service = Service();
+
+            foreach (Sheet each in service.Spreadsheets.Get(sheet.SpreadsheetId).Execute().Sheets)
+            {
+                if (each.Properties.Title == VERSION_TAB)
+                    return each.Properties.SheetId ?? 0;
+            }
+
+            var add = new Request { AddSheet = new AddSheetRequest { Properties = new SheetProperties { Title = VERSION_TAB } } };
+            BatchUpdateSpreadsheetResponse reply = service.Spreadsheets
+                .BatchUpdate(new BatchUpdateSpreadsheetRequest { Requests = new List<Request> { add } }, sheet.SpreadsheetId).Execute();
+
+            return reply.Replies[0].AddSheet.Properties.SheetId ?? 0;
+        }
+
+        /// <summary>The number in A1 of the Version tab; 0 when it holds none.</summary>
+        private int ReadRevision(ED_LocalizationSheet sheet)
+        {
+            IList<IList<object>> cell = Service().Spreadsheets.Values.Get(sheet.SpreadsheetId, Quote(VERSION_TAB) + "!A1").Execute().Values;
+            int.TryParse(cell != null && cell.Count > 0 && cell[0].Count > 0 ? cell[0][0]?.ToString() : "0", out int revision);
+
+            return revision;
+        }
+
+        /// <summary>
+        /// Takes the address File > Share > Publish to web gave - /d/e/&lt;id&gt;/pub... - and keeps the
+        /// CSV addresses of the Game tab and the Version tab on the config, once each answers as CSV.
+        /// </summary>
+        public bool LinkPublished(string address, CD_LocalizationRemote config)
+        {
+            Match id = Regex.Match(address ?? string.Empty, "/d/e/([a-zA-Z0-9-_]+)");
+            ED_LocalizationSheet sheet = _project.Sheet;
+
+            if (!id.Success)
+            {
+                Report = "That is not a published address - it has no /d/e/<id>/ in it. Use File > Share > Publish to web.";
+                return false;
+            }
+
+            if (sheet.VersionSheetId < 0)
+            {
+                Report = "Push once first: it makes the Version tab phones read.";
+                return false;
+            }
+
+            string root = $"https://docs.google.com/spreadsheets/d/e/{id.Groups[1].Value}/pub?single=true&output=csv&gid=";
+            string tableUrl = root + sheet.SheetId;
+            string revisionUrl = root + sheet.VersionSheetId;
+
+            List<List<string>> table = _csv.Parse(Fetch(tableUrl));
+            List<List<string>> revision = _csv.Parse(Fetch(revisionUrl));
+
+            if (table.Count == 0 || table[0].Count == 0 || table[0][0].Trim() != KEY_HEADER)
+            {
+                Report = "The published Game tab does not start with Key. Publish the whole document, not one other tab.";
+                return false;
+            }
+
+            if (revision.Count == 0 || revision[0].Count == 0 || !int.TryParse(revision[0][0].Trim(), out _))
+            {
+                Report = "The published Version tab holds no number. Publish the whole document, then Link again.";
+                return false;
+            }
+
+            Undo.RecordObject(config, "Localization phones");
+            config.TableUrl = tableUrl;
+            config.RevisionUrl = revisionUrl;
+            EditorUtility.SetDirty(config);
+            AssetDatabase.SaveAssetIfDirty(config);
+            Report = "Phones read the published sheet at revision " + revision[0][0].Trim() + ".";
+            return true;
+        }
+
+        /// <summary>What a phone would take from the published sheet now. Writes nothing.</summary>
+        public void CheckNow(CD_LocalizationRemote config)
+        {
+            List<List<string>> revision = _csv.Parse(Fetch(config.RevisionUrl));
+            List<List<string>> rows = _csv.Parse(Fetch(config.TableUrl));
+            string number = revision.Count > 0 && revision[0].Count > 0 ? revision[0][0].Trim() : "?";
+
+            if (!_validator.TryReadDownload(rows, out List<RemoteTextVO> texts, out string reason))
+            {
+                Report = $"Revision {number}: a phone would apply nothing - {reason}.";
+                return;
+            }
+
+            int heldBack = 0;
+            int status = rows[0].FindIndex(cell => cell.Trim() == RemoteTextsValidator.STATUS_HEADER);
+
+            for (int r = 1; r < rows.Count; r++)
+            {
+                if (status < rows[r].Count && rows[r][status].Trim().Length > 0)
+                    heldBack += rows[r][status].Split(',').Length;
+            }
+
+            Report = $"Revision {number}: a phone would read {texts.Count} text(s); {heldBack} unread machine translation(s) are held back.";
+        }
+
+        /// <summary>A published address answers without signing in, so plain HTTP is enough.</summary>
+        private string Fetch(string url)
+        {
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+
+            return client.GetStringAsync(url).GetAwaiter().GetResult();
+        }
+
         private SheetsService Service() => Provider().Service;
 
         private SheetsServiceProvider Provider()
@@ -615,6 +819,9 @@ namespace Modules.LocalizationModule.Editor
             public int Width;
             public int GridRows;
             public int GridColumns;
+            public int StatusColumn = -1;
+            public int RevisionColumn = -1;
+            public readonly Dictionary<string, string> Status = new();
             public readonly Dictionary<string, int> Columns = new();
             public readonly Dictionary<string, int> Rows = new();
             public readonly Dictionary<string, List<int>> Copies = new();

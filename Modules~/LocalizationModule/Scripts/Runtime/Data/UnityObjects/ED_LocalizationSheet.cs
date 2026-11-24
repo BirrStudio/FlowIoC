@@ -18,6 +18,12 @@ namespace Modules.LocalizationModule.Data.UnityObjects
         /// <summary>The tab's gid, the number after #gid= in the address.</summary>
         public int SheetId;
 
+        /// <summary>The gid of the Version tab the panel writes the revision into; -1 until the first Push makes it.</summary>
+        public int VersionSheetId = -1;
+
+        /// <summary>The revision phones last could see, as the panel last wrote it.</summary>
+        public int Revision;
+
         /// <summary>The last synced state, one row per key.</summary>
         public List<SheetRowEVO> Rows = new();
     }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using Modules.LocalizationModule.Constants;
 using Modules.LocalizationModule.Data.UnityObjects;
+using Modules.LocalizationModule.Remote;
 using UnityEditor;
 using UnityEditor.Localization;
 using UnityEditor.Localization.Plugins.Google;
@@ -29,6 +30,7 @@ namespace Modules.LocalizationModule.Editor
         private const string PROVIDER_PATH = FOLDER + "/SheetsServiceProvider.asset";
         private const string SHEET_PATH = FOLDER + "/ED_LocalizationSheet.asset";
         private const string FALLBACK_APPLICATION_NAME = "FlowIoCLocalization";
+        private const string REMOTE_PATH = FOLDER + "/CD_LocalizationRemote.asset";
 
         private readonly string[] _firstLanguages = { "en", "tr" };
 
@@ -40,10 +42,30 @@ namespace Modules.LocalizationModule.Editor
         // null through Unity's equality and is looked for again.
         private SheetsServiceProvider _provider;
         private ED_LocalizationSheet _sheet;
+        private CD_LocalizationRemote _remote;
 
         public SheetsServiceProvider Provider => _provider != null ? _provider : _provider = Find<SheetsServiceProvider>();
 
         public ED_LocalizationSheet Sheet => _sheet != null ? _sheet : _sheet = Find<ED_LocalizationSheet>();
+
+        public CD_LocalizationRemote Remote => _remote != null ? _remote : _remote = Find<CD_LocalizationRemote>();
+
+        /// <summary>
+        /// Whether phones can read the sheet: the settings asset carries the module's postprocessor
+        /// with its config. A project set up before phones could read it presses Set up once more.
+        /// </summary>
+        /// <summary>The settings asset's postprocessor is somebody else's, so Set up does not replace it.</summary>
+        public bool HasForeignPostprocessor
+        {
+            get
+            {
+                ITablePostprocessor current = LocalizationEditorSettings.ActiveLocalizationSettings?.GetStringDatabase()?.TablePostprocessor;
+                return current != null && current is not RemoteTextsPostprocessor;
+            }
+        }
+
+        public bool HasPostprocessor =>
+            LocalizationEditorSettings.ActiveLocalizationSettings?.GetStringDatabase()?.TablePostprocessor is RemoteTextsPostprocessor { Config: not null };
 
         /// <summary>
         /// An OAuth client on the provider. Every sheet call the panel makes writes or reads a
@@ -118,6 +140,18 @@ namespace Modules.LocalizationModule.Editor
 
             if (Sheet == null)
                 AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<ED_LocalizationSheet>(), SHEET_PATH);
+
+            if (Remote == null)
+                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<CD_LocalizationRemote>(), REMOTE_PATH);
+
+            // On the asset rather than in code: the preloaded table can load before any of the module's code runs.
+            LocalizedStringDatabase database = settings.GetStringDatabase();
+
+            // A game's own postprocessor is left in its seat: phones then read only the build, and the panel says why.
+            if (database.TablePostprocessor == null)
+                database.TablePostprocessor = new RemoteTextsPostprocessor { Config = Remote };
+            else if (database.TablePostprocessor is RemoteTextsPostprocessor { Config: null } ours)
+                ours.Config = Remote;
 
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();

@@ -55,6 +55,7 @@ namespace Modules.LocalizationModule.Editor
         private string _newKey = string.Empty;
         private string _newLanguage = string.Empty;
         private string _address = string.Empty;
+        private string _published = string.Empty;
         private string _report = string.Empty;
         private List<string> _unused;
         private HashSet<(string key, string language)> _unchecked = new();
@@ -136,6 +137,7 @@ namespace Modules.LocalizationModule.Editor
             {
                 AssetDatabase.SaveAssets();
                 _newLanguage = string.Empty;
+                ReleaseTyping();
                 _report = $"Added {code}.";
             }
             else
@@ -180,8 +182,64 @@ namespace Modules.LocalizationModule.Editor
                 new ModulePanelAction("Push", () => Defer(() => Run(() => _sync.Push(Choose))), ModulePanelActionKind.Caution, signedIn && linked),
                 new ModulePanelAction("Approve all", () => Defer(() => Run(_sync.ApproveAll)), ModulePanelActionKind.Plain, signedIn && linked));
 
+            DrawPhones(painter, signedIn && linked);
+
             if (_report.Length > 0)
                 painter.Note(_report);
+        }
+
+        /// <summary>Whether and how a phone reads corrected texts from the published sheet, without a build.</summary>
+        private void DrawPhones(ModulePanelPainter painter, bool linked)
+        {
+            painter.Heading("Phones");
+
+            if (_project.HasForeignPostprocessor)
+            {
+                painter.Warning("The Localization settings already carry a table postprocessor of the game's own, so phones read "
+                    + "only their build. Remove it from the settings asset, or call the module's from it, then press Set up.");
+                return;
+            }
+
+            if (!_project.HasPostprocessor || _project.Remote == null)
+            {
+                painter.Warning("Press Set up once more so phones can read the sheet.");
+                painter.Actions(new ModulePanelAction("Set up", () => Defer(SetUp), ModulePanelActionKind.Confirm));
+                return;
+            }
+
+            CD_LocalizationRemote config = _project.Remote;
+            bool published = config.TableUrl.Length > 0 && config.RevisionUrl.Length > 0;
+
+            painter.Field("Revision", _project.Sheet.Revision.ToString(),
+                "Raised by every Push or Approve that changed the sheet. A phone downloads the texts only when it differs "
+                + "from the one it holds. After editing the sheet by hand, Pull then Push: by hand the number has to be "
+                + "raised in two places - A1 of the Version tab and the Game tab's Revision header - and a replaced "
+                + "machine translation's language removed from its row's Status.");
+
+            _published = painter.TextField("Published address", _published,
+                help: "File > Share > Publish to web, the whole document as CSV. Paste the address it gives.");
+
+            painter.Actions(
+                new ModulePanelAction("Link published", () => Defer(() => Run(() => _sync.LinkPublished(_published.Trim(), config))), ModulePanelActionKind.Plain, linked && _published.Trim().Length > 0),
+                new ModulePanelAction("Check now", () => Defer(() => Run(() => _sync.CheckNow(config))), ModulePanelActionKind.Plain, published));
+
+            if (!published)
+            {
+                painter.Note("Not published yet: phones read only the texts in their build.");
+                return;
+            }
+
+            var serialized = new SerializedObject(config);
+            serialized.Update();
+            painter.Property(serialized.FindProperty(nameof(CD_LocalizationRemote.Frequency)), "Check",
+                help: "Never: phones read nothing. Always: every launch looks at a few bytes, and downloads the texts only when the revision changed. Daily and Weekly look less often.");
+            painter.Property(serialized.FindProperty(nameof(CD_LocalizationRemote.WaitAtBoot)), "Wait at boot",
+                help: "Off: a download is applied on the next launch and boot never waits. On: boot waits up to the seconds below, and a download that arrives in time is on screen at once.");
+
+            if (config.WaitAtBoot)
+                painter.Property(serialized.FindProperty(nameof(CD_LocalizationRemote.WaitSeconds)), "Wait seconds");
+
+            serialized.ApplyModifiedProperties();
         }
 
         private void Link()
@@ -189,6 +247,7 @@ namespace Modules.LocalizationModule.Editor
             if (_sync.Link(_address.Trim()))
             {
                 _address = string.Empty;
+                ReleaseTyping();
                 _report = "Linked. The first Pull or Push compares from nothing.";
             }
             else
@@ -352,6 +411,7 @@ namespace Modules.LocalizationModule.Editor
             _tables.Save();
             _keys.Write(_tables.Keys());
             _newKey = string.Empty;
+            ReleaseTyping();
         }
 
         private void RemoveKey(string key)
@@ -365,6 +425,16 @@ namespace Modules.LocalizationModule.Editor
         {
             _project.SetUp();
             _report = "Set up. Link a sheet, or Create sheet, to sync.";
+        }
+
+        /// <summary>
+        /// Takes the keyboard off the field just used. A text field that still has it keeps showing
+        /// what was typed, whatever the value behind it was set to.
+        /// </summary>
+        private void ReleaseTyping()
+        {
+            GUIUtility.keyboardControl = 0;
+            GUI.FocusControl(null);
         }
 
         private void Defer(Action action) => _pending.Enqueue(action);

@@ -32,7 +32,13 @@ namespace Modules.LocalizationModule.RootsContexts
         {
             base.CommandBindings();
 
-            CommandBinder.Bind(_internalSignals.Initialize).ToSequence<InitializeLocalizationCommand>();
+            CommandBinder.Bind(_internalSignals.Initialize)
+                .ToSequence<CheckRemoteTextsCommand>()
+                .ToSequence<InitializeLocalizationCommand>();
+
+            CommandBinder.Bind(_internalSignals.RemoteTextsArrived)
+                .ToSequence<StoreRemoteTextsCommand>()
+                .ToSequence<ReloadRemoteTextsCommand>();
 
             CommandBinder.Bind(_internalSignals.SetLanguage).ToSequence<ApplyLanguageCommand>();
         }
