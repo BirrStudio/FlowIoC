@@ -17,6 +17,29 @@ namespace Modules.LocalizationModule.Editor
         }
 
         /// <summary>The code Google Translate knows a locale by: zh-Hans is zh-CN, pt-BR stays itself, most are their language alone.</summary>
+        /// <summary>
+        /// What separates a formula's arguments on a sheet of this locale - en_US, tr_TR, as the
+        /// Sheets API names it. A locale whose decimals take a comma takes a semicolon between
+        /// arguments, and a comma-separated formula written to it is a parse error (#ERROR!). Reading
+        /// the formula back says nothing: the API always answers in the comma form.
+        /// </summary>
+        public string ArgumentSeparator(string locale)
+        {
+            if (string.IsNullOrEmpty(locale))
+                return ",";
+
+            try
+            {
+                var culture = new System.Globalization.CultureInfo(locale.Replace('_', '-'));
+
+                return culture.NumberFormat.NumberDecimalSeparator == "," ? ";" : ",";
+            }
+            catch (System.Globalization.CultureNotFoundException)
+            {
+                return ",";
+            }
+        }
+
         public string TranslateCode(string code)
         {
             switch (code)

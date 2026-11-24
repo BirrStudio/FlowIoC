@@ -251,6 +251,20 @@ namespace Modules.LocalizationModule.Editor
 
             if (!pull)
             {
+                // A formula still loading, or failed, that the table now has words for: the table's
+                // words replace it. Compare read the cell as the table's text, so it found nothing to
+                // send, and the sheet would hold the formula - often #ERROR! - for ever.
+                foreach ((string key, string language) in new List<(string, string)>(remote.Pending))
+                {
+                    string text = local.Get(key, language);
+
+                    if (text.Length == 0 || !remote.Columns.ContainsKey(language))
+                        continue;
+
+                    WriteRemote(remote, key, language, text, raw);
+                    toRemote++;
+                }
+
                 // A new column holds the table's texts from the start, then counts as agreed. A key
                 // new on the table side goes with it: with no column on the sheet yet - an empty
                 // sheet's first Push - the compare above had no language to send it in.
@@ -309,10 +323,12 @@ namespace Modules.LocalizationModule.Editor
                     if (language == LocalizationConstants.SOURCE_LANGUAGE
                         || local.Get(row.Key, language).Length > 0
                         || remote.Grid.Get(row.Key, language).Length > 0
-                        || remote.Formulas.Contains((row.Key, language)))
+                        || (remote.Formulas.Contains((row.Key, language)) && !remote.Pending.Contains((row.Key, language))))
                         continue;
 
-                    string formula = $"{FORMULA}{_address.Column(source)}{row.Value + 1},\"{_address.TranslateCode(LocalizationConstants.SOURCE_LANGUAGE)}\",\"{_address.TranslateCode(language)}\")";
+                    // Written with the sheet's own separator: a tr_TR sheet reads a comma-separated formula as a parse error.
+                    string separator = remote.Separator;
+                    string formula = $"{FORMULA}{_address.Column(source)}{row.Value + 1}{separator}\"{_address.TranslateCode(LocalizationConstants.SOURCE_LANGUAGE)}\"{separator}\"{_address.TranslateCode(language)}\")";
                     formulas.Add(Cell(remote.Title, row.Value, remote.Columns[language], formula));
                 }
             }
@@ -426,7 +442,7 @@ namespace Modules.LocalizationModule.Editor
         private RemoteSheet Read(ED_LocalizationSheet sheet)
         {
             SheetsService service = Service();
-            Sheet tab = TabOf(service, sheet);
+            Sheet tab = TabOf(service, sheet, out string locale);
             string title = tab.Properties.Title;
 
             SpreadsheetsResource.ValuesResource.GetRequest words = service.Spreadsheets.Values.Get(sheet.SpreadsheetId, Quote(title));
@@ -440,6 +456,7 @@ namespace Modules.LocalizationModule.Editor
             var remote = new RemoteSheet
             {
                 Title = title,
+                Separator = _address.ArgumentSeparator(locale),
                 RowCount = Math.Max(values.Count, 1),
                 GridRows = tab.Properties.GridProperties?.RowCount ?? 0,
                 GridColumns = tab.Properties.GridProperties?.ColumnCount ?? 0
@@ -791,12 +808,18 @@ namespace Modules.LocalizationModule.Editor
             return _project.Provider;
         }
 
-        private Sheet TabOf(SheetsService service, ED_LocalizationSheet sheet)
+        private Sheet TabOf(SheetsService service, ED_LocalizationSheet sheet) => TabOf(service, sheet, out _);
+
+        /// <summary>The linked tab, and the spreadsheet's locale - en_US, tr_TR - which decides how a formula is written.</summary>
+        private Sheet TabOf(SheetsService service, ED_LocalizationSheet sheet, out string locale)
         {
             if (string.IsNullOrEmpty(sheet.SpreadsheetId))
                 throw new InvalidOperationException("No sheet is linked. Paste its address in Sheet or press Create sheet.");
 
-            foreach (Sheet tab in service.Spreadsheets.Get(sheet.SpreadsheetId).Execute().Sheets)
+            Spreadsheet document = service.Spreadsheets.Get(sheet.SpreadsheetId).Execute();
+            locale = document.Properties?.Locale;
+
+            foreach (Sheet tab in document.Sheets)
             {
                 if (tab.Properties.SheetId == sheet.SheetId)
                     return tab;
@@ -815,6 +838,7 @@ namespace Modules.LocalizationModule.Editor
         private class RemoteSheet
         {
             public string Title;
+            public string Separator = ",";
             public int RowCount;
             public int Width;
             public int GridRows;

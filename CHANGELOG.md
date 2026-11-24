@@ -5,6 +5,17 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.38.5] - 2026-11-24
+
+### Changed
+
+- Modules: Localization 1.1.1.
+
+### Fixed
+
+- Localization: Push writes GOOGLETRANSLATE with the sheet's own argument separator, so a sheet in a comma-decimal locale (tr_TR, de_DE, pt_BR) translates instead of showing #ERROR!. The next Push repairs a sheet already stuck that way.
+- Localization: Push replaces a failed or loading machine translation with the table's text once the table has one.
+
 ## [1.38.4] - 2026-11-24
 
 ### Added
