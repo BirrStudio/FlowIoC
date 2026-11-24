@@ -5,6 +5,18 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.38.3] - 2026-11-24
+
+### Changed
+
+- Modules: Loading 1.2.3, Localization 1.0.1.
+
+### Fixed
+
+- Loading: the loading screen's art loads from Addressables content directories (Unity 6.6) instead of throwing `InvalidKeyException`. Thanks to @MuhammedResulBilkil (#5).
+- Localization: Push and Pull no longer fail with "Invalid Application name" when the product name holds a space or a `:`; a project set up before is repaired on its next sheet call.
+- Localization: the first Push to an empty sheet writes every key, not only the header.
+
 ## [1.38.2] - 2026-11-03
 
 ### Changed

@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Modules.LocalizationModule.Constants;
 using Modules.LocalizationModule.Data.UnityObjects;
 using UnityEditor;
@@ -27,6 +28,7 @@ namespace Modules.LocalizationModule.Editor
         private const string TABLES_FOLDER = FOLDER + "/Tables";
         private const string PROVIDER_PATH = FOLDER + "/SheetsServiceProvider.asset";
         private const string SHEET_PATH = FOLDER + "/ED_LocalizationSheet.asset";
+        private const string FALLBACK_APPLICATION_NAME = "FlowIoCLocalization";
 
         private readonly string[] _firstLanguages = { "en", "tr" };
 
@@ -110,7 +112,7 @@ namespace Modules.LocalizationModule.Editor
             if (Provider == null)
             {
                 var provider = ScriptableObject.CreateInstance<SheetsServiceProvider>();
-                provider.ApplicationName = Application.productName;
+                provider.ApplicationName = ApplicationName();
                 AssetDatabase.CreateAsset(provider, PROVIDER_PATH);
             }
 
@@ -163,6 +165,58 @@ namespace Modules.LocalizationModule.Editor
             selectors.Add(new SystemLocaleSelector());
             selectors.Add(new SpecificLocaleSelector { LocaleId = new LocaleIdentifier(LocalizationConstants.SOURCE_LANGUAGE) });
         }
+
+        /// <summary>
+        /// Puts a name Google accepts on the provider when the one there is not, and saves it. A
+        /// project set up before the name was cleaned carries the raw product name, and Google
+        /// refuses that on every call with "Invalid Application name".
+        /// </summary>
+        public void RepairApplicationName()
+        {
+            SheetsServiceProvider provider = Provider;
+
+            if (provider == null || IsValidApplicationName(provider.ApplicationName))
+                return;
+
+            provider.ApplicationName = ApplicationName();
+            EditorUtility.SetDirty(provider);
+            AssetDatabase.SaveAssetIfDirty(provider);
+        }
+
+        /// <summary>
+        /// The product name kept to letters, digits, '.', '_' and '-'. Google.Apis puts the name in
+        /// the User-Agent header and refuses a space or a ':' there, which a product name like
+        /// "Roller Guy : Color Sort" holds.
+        /// </summary>
+        private string ApplicationName()
+        {
+            var name = new StringBuilder();
+
+            foreach (char c in Application.productName)
+            {
+                if (IsApplicationNameChar(c))
+                    name.Append(c);
+            }
+
+            return name.Length == 0 ? FALLBACK_APPLICATION_NAME : name.ToString();
+        }
+
+        private bool IsValidApplicationName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return false;
+
+            foreach (char c in name)
+            {
+                if (!IsApplicationNameChar(c))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool IsApplicationNameChar(char c) =>
+            c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '.' or '_' or '-';
 
         private T Find<T>() where T : Object
         {

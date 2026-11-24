@@ -20,7 +20,9 @@ SPR_LoadingBackground, LoadingScreenView
   with nothing on stage. `SPR_LoadingBackground` in `Art/` is the one thing a game changes between
   releases: bundled on the prefab as the fallback, loaded again through `IAssetService` from the
   context's `Launch`, replaced in place when the load lands and never reset between openings. A
-  game replaces the asset and keeps the address.
+  game replaces the asset and keeps the address. The art is asked for as `IList<Sprite>`, the
+  sub-asset form, so it loads from content directories (Unity 6.6) as it does from AssetBundles:
+  content directories refuse a texture's own address as a `Sprite`.
 
 ## Known gaps
 - No show or hide animation; a game adds one in the prefab it owns after install.

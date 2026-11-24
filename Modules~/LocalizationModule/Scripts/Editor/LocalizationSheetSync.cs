@@ -60,7 +60,7 @@ namespace Modules.LocalizationModule.Editor
         public void Create()
         {
             ED_LocalizationSheet sheet = _project.Sheet;
-            (string spreadsheetId, int sheetId) = new GoogleSheets(_project.Provider)
+            (string spreadsheetId, int sheetId) = new GoogleSheets(Provider())
                 .CreateSpreadsheet($"{UnityEngine.Application.productName} Localization", LocalizationConstants.TABLE, new NewSheetProperties());
 
             Undo.RecordObject(sheet, "Localization sheet");
@@ -243,10 +243,23 @@ namespace Modules.LocalizationModule.Editor
 
             if (!pull)
             {
-                // A new column holds the table's texts from the start, then counts as agreed.
+                // A new column holds the table's texts from the start, then counts as agreed. A key
+                // new on the table side goes with it: with no column on the sheet yet - an empty
+                // sheet's first Push - the compare above had no language to send it in.
+                var keys = new List<string>(remote.Rows.Keys);
+
+                foreach (string key in local.Keys)
+                {
+                    if (missing.Count > 0 && !remote.Rows.ContainsKey(key) && !synced.ContainsKey(key))
+                    {
+                        keys.Add(key);
+                        toRemote++;
+                    }
+                }
+
                 foreach (string language in missing)
                 {
-                    foreach (string key in new List<string>(remote.Rows.Keys))
+                    foreach (string key in keys)
                         WriteRemote(remote, key, language, local.Get(key, language), raw);
                 }
 
@@ -562,12 +575,16 @@ namespace Modules.LocalizationModule.Editor
             Service().Spreadsheets.BatchUpdate(new BatchUpdateSpreadsheetRequest { Requests = requests }, sheet.SpreadsheetId).Execute();
         }
 
-        private SheetsService Service()
+        private SheetsService Service() => Provider().Service;
+
+        private SheetsServiceProvider Provider()
         {
             if (_project.Provider == null)
                 throw new InvalidOperationException("No SheetsServiceProvider in the project. Press Set up.");
 
-            return _project.Provider.Service;
+            _project.RepairApplicationName();
+
+            return _project.Provider;
         }
 
         private Sheet TabOf(SheetsService service, ED_LocalizationSheet sheet)
