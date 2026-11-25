@@ -33,6 +33,12 @@ namespace Modules.AdsModule.Models
         /// <summary>When the last interstitial closed, in realtime seconds; negative infinity until one has.</summary>
         float LastInterstitialTime { get; }
 
+        /// <summary>When the last rewarded ad closed, in realtime seconds; negative infinity until one has.</summary>
+        float LastRewardedTime { get; }
+
+        /// <summary>Interstitials closed since the module started.</summary>
+        int InterstitialsShown { get; }
+
         AdSlotVO GetSlot(AdFormat format);
 
         void Plug(IAdsProvider provider);
@@ -54,6 +60,9 @@ namespace Modules.AdsModule.Models
 
         void SetMuted(bool muted);
 
+        /// <summary>An interstitial closed at this time: the pacing clock restarts and the session count rises.</summary>
         void MarkInterstitialShown(float time);
+
+        void MarkRewardedShown(float time);
     }
 }

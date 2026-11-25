@@ -46,6 +46,10 @@ namespace Modules.AdsModule.Models
 
         public float LastInterstitialTime { get; private set; } = float.NegativeInfinity;
 
+        public float LastRewardedTime { get; private set; } = float.NegativeInfinity;
+
+        public int InterstitialsShown { get; private set; }
+
         public void PostConstruct()
         {
             RootAdapter adapter = _root != null ? _root.GetComponent<RootAdapter>() : null;
@@ -115,6 +119,12 @@ namespace Modules.AdsModule.Models
 
         public void SetMuted(bool muted) => Muted = muted;
 
-        public void MarkInterstitialShown(float time) => LastInterstitialTime = time;
+        public void MarkInterstitialShown(float time)
+        {
+            LastInterstitialTime = time;
+            InterstitialsShown++;
+        }
+
+        public void MarkRewardedShown(float time) => LastRewardedTime = time;
     }
 }

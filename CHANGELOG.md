@@ -5,6 +5,19 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Consent module: the consent form and the iOS tracking prompt behind one plug, announced once on `Outgoing.Resolved` for the Connector to hand to the ad and analytics SDKs. With no plug a release build answers Denied and reports it.
+- Ads: a mock plug, `MockAdsServiceContext`, that answers by itself in the Editor and in a Development Build until a mediation SDK is chosen.
+- Ads: `CD_Ads` can switch interstitials off, cap them per session, and hold them back after a rewarded ad; each skip carries its reason.
+
+### Changed
+
+- Modules: Ads 1.2.0, Consent 1.0.0.
+- Help updated.
+
 ## [1.38.6] - 2026-11-25
 
 ### Changed

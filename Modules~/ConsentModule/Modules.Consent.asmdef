@@ -1,0 +1,17 @@
+{
+  "name": "Modules.Consent",
+  "references": [
+    "FlowIoC",
+    "Modules.Consent.Shared",
+    "Modules.Consent.Signals"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

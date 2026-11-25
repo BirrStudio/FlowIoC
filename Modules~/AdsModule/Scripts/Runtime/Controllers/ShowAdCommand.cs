@@ -14,8 +14,10 @@ using UnityEngine;
 namespace Modules.AdsModule.Controllers
 {
     /// <summary>
-    /// The one place a show is decided. Five refusals in order - no provider ready, another ad on
-    /// screen, ads removed, too soon, nothing loaded - each answered in this call; past them the
+    /// The one place a show is decided. The refusals in order - no provider ready, another ad on
+    /// screen, then for an interstitial ads removed, switched off, session cap, too soon after the
+    /// last interstitial, too soon after a rewarded ad - and nothing loaded, each answered in this
+    /// call with its reason; past them the
     /// show begins, the provider is told, and a timeout watches for a provider that never answers.
     /// The watch works from locals: this step is not retained, so its instance is back in the
     /// pool while the wait runs.
@@ -62,9 +64,9 @@ namespace Modules.AdsModule.Controllers
                 return;
             }
 
-            if (_format == AdFormat.Interstitial && IsTooSoon(out float left))
+            if (_format == AdFormat.Interstitial && IsPaced(out string paced))
             {
-                Refuse(AdOutcome.Skipped, $"{left:0} s until the next interstitial");
+                Refuse(AdOutcome.Skipped, paced);
                 return;
             }
 
@@ -122,20 +124,51 @@ namespace Modules.AdsModule.Controllers
             });
         }
 
-        private bool IsTooSoon(out float left)
+        private bool IsPaced(out string reason)
         {
-            float interval = _model.Settings.InterstitialMinIntervalSeconds;
+            AdsSettingsCVO settings = _model.Settings;
+
+            if (!settings.InterstitialEnabled)
+            {
+                reason = "interstitials disabled in CD_Ads";
+                return true;
+            }
+
+            if (settings.MaxInterstitialsPerSession > 0 && _model.InterstitialsShown >= settings.MaxInterstitialsPerSession)
+            {
+                reason = $"session cap reached: {_model.InterstitialsShown}/{settings.MaxInterstitialsPerSession}";
+                return true;
+            }
+
+            if (IsWithin(settings.InterstitialMinIntervalSeconds, _model.LastInterstitialTime, out float left))
+            {
+                reason = $"too soon after the last interstitial: {left:0} s left";
+                return true;
+            }
+
+            if (IsWithin(settings.CooldownAfterRewardedSeconds, _model.LastRewardedTime, out left))
+            {
+                reason = $"too soon after a rewarded ad: {left:0} s left";
+                return true;
+            }
+
+            reason = null;
+            return false;
+        }
+
+        private static bool IsWithin(float seconds, float since, out float left)
+        {
             left = 0f;
 
-            if (interval <= 0f)
+            if (seconds <= 0f)
                 return false;
 
-            float elapsed = Time.realtimeSinceStartup - _model.LastInterstitialTime;
+            float elapsed = Time.realtimeSinceStartup - since;
 
-            if (elapsed >= interval)
+            if (elapsed >= seconds)
                 return false;
 
-            left = interval - elapsed;
+            left = seconds - elapsed;
             return true;
         }
 

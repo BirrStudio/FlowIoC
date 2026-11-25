@@ -14,5 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Modules.Ads::Modules.AdsModule.Data.UnityObjects.CD_Ads
   Settings:
     InitializeOnLaunch: 1
+    InterstitialEnabled: 1
     InterstitialMinIntervalSeconds: 5
+    CooldownAfterRewardedSeconds: 0
+    MaxInterstitialsPerSession: 0
     ShowTimeoutSeconds: 10

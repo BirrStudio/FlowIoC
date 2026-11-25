@@ -1,0 +1,17 @@
+{
+  "name": "Modules.MockAds",
+  "references": [
+    "FlowIoC",
+    "Modules.Ads",
+    "Modules.Ads.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

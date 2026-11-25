@@ -45,6 +45,8 @@ namespace Modules.AdsModule.Controllers
 
             if (_format == AdFormat.Interstitial)
                 _model.MarkInterstitialShown(Time.realtimeSinceStartup);
+            else
+                _model.MarkRewardedShown(Time.realtimeSinceStartup);
 
             _model.EndShow();
             _ads.Outgoing.Closed.Dispatch(_format, current.Placement);

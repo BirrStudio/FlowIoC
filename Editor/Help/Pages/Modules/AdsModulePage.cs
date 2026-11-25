@@ -77,9 +77,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.Space();
             painter.Note(
-                "The module resolves no consent. A game in the EEA runs its consent flow - or MAX's own, "
-                + "enabled in the Integration Manager - and one SetConsent call; until then the SDK runs "
-                + "with its own default.");
+                "The module resolves no consent. A game in the EEA runs the Consent module - or MAX's own "
+                + "flow, enabled in the Integration Manager - and hands the answer to Commands.SetConsent; "
+                + "until then the SDK runs with its own default.");
         }
 
         private void DrawSetup(HelpPainter painter)
@@ -88,7 +88,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Bullet(
                 "AdsServiceRoot into the scene the game boots from, Initialize Order -84, right behind "
                 + "Analytics. CD_Ads ships filed on its adapter: InitializeOnLaunch (on), "
-                + "InterstitialMinIntervalSeconds (0), ShowTimeoutSeconds (10).");
+                + "InterstitialEnabled (on), InterstitialMinIntervalSeconds (0), CooldownAfterRewardedSeconds (0), "
+                + "MaxInterstitialsPerSession (0, no cap), ShowTimeoutSeconds (10).");
             painter.Image(_images.Get("AdsRootHierarchy.png"),
                 "AdsServiceRoot in MainScene, in the Services band.");
             painter.Image(_images.Get("AdsRootAdapter.png"),
@@ -112,6 +113,12 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "ids from the AppLovin dashboard, and file the asset in AdsServiceRoot's Shared Scriptables. "
                 + "Without it the plug reports at Setup and never initializes; the SDK key itself lives in "
                 + "AppLovin's Integration Manager, where the module cannot see it.");
+            painter.Note(
+                "No SDK chosen yet: list MockAdsServiceContext instead. It answers by itself - loads land "
+                + "in half a second, a show lasts one, and CD_MockAds (filed in Shared Scriptables, or the "
+                + "defaults) says whether a rewarded ad is earned, dismissed or fails. It compiles in the "
+                + "Editor and in a Development Build only; a release build plugs nothing. Replace the entry "
+                + "with the SDK's plug when it lands - two plugs listed together are refused with an error.");
 
             painter.Separator();
             painter.SubHeading("Order");
