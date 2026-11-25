@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Firebase;
 using Firebase.Analytics;
 using Firebase.Extensions;
@@ -18,15 +19,35 @@ namespace Modules.AnalyticsModule.FirebaseAnalyticsModule.Services
     /// </summary>
     public class FirebaseAnalyticsProvider : IAnalyticsProvider
     {
+        private const int DEPENDENCY_CHECK_ATTEMPTS = 20;
+        private const int DEPENDENCY_CHECK_RETRY_MILLISECONDS = 500;
+
         private readonly AnalyticsEventTrimmer _trimmer = new();
         private readonly AnalyticsLimitsVO _limits = new(40, 40, 100, 25);
 
         public string Name => "Firebase";
 
-        public void Initialize(Action<bool> ready)
+        public void Initialize(Action<bool> ready) => CheckDependencies(ready, 1);
+
+        // Another Firebase SDK in the game (Crashlytics, Messaging) may be running the same check at
+        // boot. Firebase does not wait for it: a second, concurrent call comes back faulted with
+        // "Don't call other Firebase functions while CheckDependencies is running". A faulted check
+        // is therefore asked again after a short wait, a bounded number of times; once the other
+        // check is over, the next call answers from Firebase's cached result at once. The queue in
+        // the core holds the events meanwhile, and ready is called exactly once, with the outcome.
+        private void CheckDependencies(Action<bool> ready, int attempt)
         {
             FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
             {
+                if (!task.IsCompletedSuccessfully && attempt < DEPENDENCY_CHECK_ATTEMPTS)
+                {
+                    FlowLogger.Log($"Initialize - the dependency check faulted, attempt {attempt}; asking again: " +
+                                   (task.Exception?.GetBaseException().Message ?? "no message"));
+                    Task.Delay(DEPENDENCY_CHECK_RETRY_MILLISECONDS)
+                        .ContinueWithOnMainThread(_ => CheckDependencies(ready, attempt + 1));
+                    return;
+                }
+
                 bool available = task.IsCompletedSuccessfully && task.Result == DependencyStatus.Available;
 
                 if (available)
@@ -39,7 +60,7 @@ namespace Modules.AnalyticsModule.FirebaseAnalyticsModule.Services
                     string reason = task.IsCompletedSuccessfully
                         ? task.Result.ToString()
                         : task.Exception?.GetBaseException().Message ?? "the dependency check did not complete";
-                    FlowLogger.LogError($"Initialize - Firebase is not available: {reason}");
+                    FlowLogger.LogError($"Initialize - Firebase is not available after {attempt} attempt(s): {reason}");
                 }
 
                 ready(available);
