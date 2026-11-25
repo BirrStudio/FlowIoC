@@ -38,7 +38,10 @@ namespace Modules.ConsentModule.Shared.Data.ValueObjects
         /// <summary>Sending user data to Google for ads. TCF: purposes 1 and 7.</summary>
         public bool AdUserData => IsInTcfString ? HasPurpose(1) && HasPurpose(7) : IsGranted;
 
-        /// <summary>Personalised ads. TCF: purposes 3 and 4.</summary>
+        /// <summary>
+        /// Consent to personalised ads. TCF: purposes 3 and 4. It carries no ATT answer: hand an
+        /// analytics SDK's ad_personalization CanTrack, which adds it.
+        /// </summary>
         public bool AdPersonalization => IsInTcfString ? HasPurpose(3) && HasPurpose(4) : IsGranted;
 
         /// <summary>Storing analytics data on the device. TCF has no analytics purpose of its own: purpose 1.</summary>

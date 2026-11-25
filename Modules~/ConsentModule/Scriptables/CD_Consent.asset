@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Modules.Consent::Modules.ConsentModule.Data.UnityObjects.CD_Consent
   Settings:
     RequestOnLaunch: 1
+    ReleaseConsentWithoutPlug: 2
     DevelopmentConsent: 1
     DevelopmentTracking: 2

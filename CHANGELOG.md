@@ -5,6 +5,20 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.39.1] - 2026-11-25
+
+### Added
+
+- Consent: `CD_Consent.ReleaseConsentWithoutPlug` sets what a release build with no consent plug answers. It ships as Denied; a tester build made before the consent SDK is in can set NotRequired and keep analytics.
+
+### Changed
+
+- Modules: Consent 1.0.2.
+
+### Fixed
+
+- Consent: the Connector example hands an analytics SDK's `ad_personalization` `CanTrack`, so an iOS player who refused the tracking prompt is not reported as consenting to personalised ads.
+
 ## [1.39.0] - 2026-11-25
 
 ### Added

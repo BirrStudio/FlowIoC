@@ -76,8 +76,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Note(
                 "With no plug, the Editor and a Development Build plug a stand-in that answers "
                 + "DevelopmentConsent and DevelopmentTracking from CD_Consent, with a warning. A release "
-                + "build reports the missing plug as an error and answers Denied: ads still run, "
-                + "non-personalised, and nothing personal is used because a plug was forgotten.");
+                + "build reports the missing plug as an error and answers ReleaseConsentWithoutPlug - "
+                + "Denied as shipped, so nothing personal is used because a plug was forgotten; a tester "
+                + "build made before the consent SDK is in sets NotRequired and stays measured.");
 
             painter.Separator();
             painter.SubHeading("Trying it out");
@@ -94,8 +95,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Bullet(
                 "ConsentServiceRoot into the scene the game boots from, Initialize Order -86, ahead of "
                 + "Analytics and Ads. CD_Consent ships filed on its adapter: RequestOnLaunch (on), "
-                + "DevelopmentConsent (Granted), DevelopmentTracking (Authorized); RD_Consent ships in "
-                + "its Shared Scriptables.");
+                + "ReleaseConsentWithoutPlug (Denied), DevelopmentConsent (Granted), DevelopmentTracking "
+                + "(Authorized); RD_Consent ships in its Shared Scriptables.");
             painter.Image(_images.Get("ConsentRootHierarchy.png"),
                 "ConsentServiceRoot in MainScene, in the Services band.");
             painter.Image(_images.Get("ConsentRootAdapter.png"),
@@ -106,8 +107,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Note(
                 "Important: a plug is an entry on ConsentServiceRoot's Sub Context Types with AutoSetup "
                 + "on - UmpConsentServiceContext for the form, AttTrackingServiceContext for the iOS "
-                + "prompt. With none, a release build answers Denied for every player - the error is the "
-                + "only report, and personalised ads never run.");
+                + "prompt. With none, a release build answers ReleaseConsentWithoutPlug - Denied as shipped "
+                + "- for every player: the error is the only report, and neither personalised ads nor "
+                + "analytics run. A tester build without the SDK sets NotRequired there.");
             painter.Note(
                 "The UMP plug compiles only when com.google.ads.mobile is in the manifest (OpenUPM); from "
                 + "the .unitypackage, add FLOWIOC_GOOGLE_UMP to Scripting Define Symbols. The ATT plug "
@@ -134,13 +136,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "the player's choices are in the IAB TCF string MAX and AdMob read themselves; a "
                 + "SetConsent would override the string, and nothing reports it.");
             painter.Paragraph(
-                "The analytics step is the same in both: ConsentVO's four readings are Google consent "
-                + "mode's four flags - from the TCF purposes for a UMP answer (AdStorage purpose 1, "
-                + "AdUserData 1 and 7, AdPersonalization 3 and 4, AnalyticsStorage 1), and from Granted "
-                + "or Denied otherwise.");
+                "The analytics step is the same in both: ConsentVO's readings are Google consent mode's "
+                + "flags - from the TCF purposes for a UMP answer (AdStorage purpose 1, AdUserData 1 and "
+                + "7, AdPersonalization 3 and 4, AnalyticsStorage 1), and from Granted or Denied otherwise. "
+                + "ad_personalization takes CanTrack, which adds the ATT answer, so an iOS player who "
+                + "refused tracking is not profiled.");
             painter.Code(
                 "CommandBinder.Bind(_consent.Outgoing.Resolved)\n"
-                + "    .ToSequence<ToAnalyticsConsentCommand>()       // Release(new AnalyticsConsentVO(c.AnalyticsStorage, c.AdStorage, c.AdUserData, c.AdPersonalization))\n"
+                + "    .ToSequence<ToAnalyticsConsentCommand>()       // Release(new AnalyticsConsentVO(c.AnalyticsStorage, c.AdStorage, c.AdUserData, c.CanTrack))\n"
                 + "    .ToSequence<IAnalyticsService.Commands.SetConsent>()\n"
                 + "    .ToSequence<IAdsService.Commands.Initialize>();",
                 "With the UMP plug.");
@@ -148,7 +151,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "CommandBinder.Bind(_consent.Outgoing.Resolved)\n"
                 + "    .ToSequence<ToAdsConsentCommand>()             // Release(new AdsConsentVO(consent.CanPersonalise))\n"
                 + "    .ToSequence<IAdsService.Commands.SetConsent>()\n"
-                + "    .ToSequence<ToAnalyticsConsentCommand>()       // Release(new AnalyticsConsentVO(c.AnalyticsStorage, c.AdStorage, c.AdUserData, c.AdPersonalization))\n"
+                + "    .ToSequence<ToAnalyticsConsentCommand>()       // Release(new AnalyticsConsentVO(c.AnalyticsStorage, c.AdStorage, c.AdUserData, c.CanTrack))\n"
                 + "    .ToSequence<IAnalyticsService.Commands.SetConsent>()\n"
                 + "    .ToSequence<IAdsService.Commands.Initialize>();",
                 "With a plug that answers Granted or Denied - your own form, or the stand-ins.");
