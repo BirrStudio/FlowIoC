@@ -23,7 +23,7 @@ namespace Modules.ConsentModule.Controllers
             Retain();
 
             IConsentModel model = _model;
-            IConsentProvider provider = model.Provider;
+            ITrackingProvider provider = model.TrackingProvider;
             bool answered = false;
 
             try

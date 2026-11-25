@@ -33,14 +33,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "The module knows no other module: the game's Connector is where the answer becomes each "
                 + "SDK's flags."),
             new HelpTab("Providers", DrawProviders,
-                "The socket, the stand-ins, and your own plug over UMP or ATT.",
+                "Two sockets, the shipped UMP and ATT plugs, the stand-ins, and your own.",
                 "A provider shows the form it is told to and answers once; the order and the publishing "
                 + "are the module's.")
         };
 
         public override string InstalledHint =>
-            "Drop ConsentServiceRoot into your boot scene ahead of Analytics and Ads, plug your consent "
-            + "SDK, and hang the hand-over on Outgoing.Resolved in your Connector; the Setup tab has the steps.";
+            "Drop ConsentServiceRoot into your boot scene ahead of Analytics and Ads, list the UMP and ATT "
+            + "plugs on it, and hang the hand-over on Outgoing.Resolved in your Connector; the Setup tab has the steps.";
 
         public override string BodyHeadline =>
             "Ask once, before anything personal is used, and hand the answer to every SDK.";
@@ -56,14 +56,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "IConsentService: IsResolved, Current, Request, ShowPrivacyOptions. A Service, so any "
                 + "module references Modules.Consent and injects it.");
             painter.Bullet(
-                "A socket: IConsentProvider, one consent SDK - Google UMP for the form, Apple's ATT for "
-                + "the tracking prompt, or one SDK doing both.");
+                "Two sockets: IConsentProvider for the consent form and ITrackingProvider for the "
+                + "tracking prompt. The Google UMP and Apple ATT plugs ship, each compiled only when its "
+                + "SDK is in the project.");
             painter.Bullet(
                 "Two steps a game binds: Commands.Request, when CD_Consent.RequestOnLaunch is off, and "
                 + "Commands.ShowPrivacyOptions, for a settings button.");
             painter.Bullet(
-                "ConsentVO with two readings, CanPersonalise and CanTrack, announced on Outgoing.Resolved "
-                + "and filed in RD_Consent for a module that reads it later.");
+                "ConsentVO with Google consent mode's four flags - AdStorage, AdUserData, AdPersonalization, "
+                + "AnalyticsStorage - plus CanPersonalise and CanTrack, announced on Outgoing.Resolved and "
+                + "filed in RD_Consent for a module that reads it later.");
 
             painter.Separator();
             painter.SubHeading("When it decides");
@@ -103,8 +105,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("The plug");
             painter.Note(
                 "Important: a plug is an entry on ConsentServiceRoot's Sub Context Types with AutoSetup "
-                + "on. With none, a release build answers Denied for every player - the error is the only "
-                + "report, and personalised ads never run.");
+                + "on - UmpConsentServiceContext for the form, AttTrackingServiceContext for the iOS "
+                + "prompt. With none, a release build answers Denied for every player - the error is the "
+                + "only report, and personalised ads never run.");
+            painter.Note(
+                "The UMP plug compiles only when com.google.ads.mobile is in the manifest (OpenUPM); from "
+                + "the .unitypackage, add FLOWIOC_GOOGLE_UMP to Scripting Define Symbols. The ATT plug "
+                + "needs com.unity.ads.ios-support and an NSUserTrackingUsageDescription in Info.plist; "
+                + "iOS refuses the prompt without it.");
 
             painter.Separator();
             painter.SubHeading("The SDKs wait");
@@ -118,15 +126,32 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             painter.SubHeading("Handing the answer on");
             painter.Paragraph(
-                "A sub-context in the game's ConnectorModule, because it knows both SDK modules. The two "
-                + "To steps only translate the payload and hand it on with Release:");
+                "A sub-context in the game's ConnectorModule, because it knows both SDK modules. Which "
+                + "sequence it hangs on Resolved depends on the form's plug - a choice the game makes once. "
+                + "The To steps only translate the payload and hand it on with Release.");
+            painter.Note(
+                "Important: with the UMP plug, hand the ad SDK no consent flag. The answer is Recorded and "
+                + "the player's choices are in the IAB TCF string MAX and AdMob read themselves; a "
+                + "SetConsent would override the string, and nothing reports it.");
+            painter.Paragraph(
+                "The analytics step is the same in both: ConsentVO's four readings are Google consent "
+                + "mode's four flags - from the TCF purposes for a UMP answer (AdStorage purpose 1, "
+                + "AdUserData 1 and 7, AdPersonalization 3 and 4, AnalyticsStorage 1), and from Granted "
+                + "or Denied otherwise.");
+            painter.Code(
+                "CommandBinder.Bind(_consent.Outgoing.Resolved)\n"
+                + "    .ToSequence<ToAnalyticsConsentCommand>()       // Release(new AnalyticsConsentVO(c.AnalyticsStorage, c.AdStorage, c.AdUserData, c.AdPersonalization))\n"
+                + "    .ToSequence<IAnalyticsService.Commands.SetConsent>()\n"
+                + "    .ToSequence<IAdsService.Commands.Initialize>();",
+                "With the UMP plug.");
             painter.Code(
                 "CommandBinder.Bind(_consent.Outgoing.Resolved)\n"
                 + "    .ToSequence<ToAdsConsentCommand>()             // Release(new AdsConsentVO(consent.CanPersonalise))\n"
                 + "    .ToSequence<IAdsService.Commands.SetConsent>()\n"
-                + "    .ToSequence<ToAnalyticsConsentCommand>()       // Release(new AnalyticsConsentVO(p, p, p, consent.CanTrack))\n"
+                + "    .ToSequence<ToAnalyticsConsentCommand>()       // Release(new AnalyticsConsentVO(c.AnalyticsStorage, c.AdStorage, c.AdUserData, c.AdPersonalization))\n"
                 + "    .ToSequence<IAnalyticsService.Commands.SetConsent>()\n"
-                + "    .ToSequence<IAdsService.Commands.Initialize>();");
+                + "    .ToSequence<IAdsService.Commands.Initialize>();",
+                "With a plug that answers Granted or Denied - your own form, or the stand-ins.");
             painter.Paragraph(
                 "Resolved goes out again after the privacy options answer; the second Initialize is "
                 + "logged and ignored.");
@@ -142,27 +167,38 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         private void DrawProviders(HelpPainter painter)
         {
-            painter.SubHeading("The socket");
+            painter.SubHeading("The sockets");
             painter.Paragraph(
-                "IConsentProvider has three calls, each answered exactly once on the main thread: "
-                + "RequestConsent (the status, and whether privacy options must be offered), "
-                + "RequestTracking (NotApplicable where the platform has no prompt), and "
-                + "ShowPrivacyOptions (the new status). A provider that throws counts as Denied.");
+                "IConsentProvider has two calls, each answered exactly once on the main thread: "
+                + "RequestConsent (the status, and whether privacy options must be offered) and "
+                + "ShowPrivacyOptions (the new status). ITrackingProvider has one, RequestTracking "
+                + "(NotApplicable where the platform has no prompt). A provider that throws counts as "
+                + "Denied.");
+
+            painter.Separator();
+            painter.SubHeading("The shipped plugs");
+            painter.Bullet(
+                "UmpConsentServiceContext - Google UMP. A form the player answered is Recorded, with "
+                + "the TCF purposes read back; NotRequired passes as it is, a form that could not be "
+                + "shown is Denied.");
+            painter.Bullet(
+                "AttTrackingServiceContext - Apple ATT. A status already decided is answered without "
+                + "the prompt; off an iPhone the answer is NotApplicable.");
 
             painter.Separator();
             painter.SubHeading("Your own plug");
             painter.Code(
                 "[AllowAsSubContext]\n"
-                + "public class UmpConsentContext : Context\n"
+                + "public class MyConsentContext : Context\n"
                 + "{\n"
                 + "    private IConsentService _consent;\n"
-                + "    private UmpConsentProvider _provider;\n"
+                + "    private MyConsentProvider _provider;\n"
                 + "\n"
                 + "    public override void Setup()\n"
                 + "    {\n"
                 + "        base.Setup();\n"
                 + "        _consent = InjectionBinderCrossContext.GetInstance<IConsentService>();\n"
-                + "        _provider = new UmpConsentProvider();\n"
+                + "        _provider = new MyConsentProvider();\n"
                 + "        _consent.Plug(_provider);\n"
                 + "    }\n"
                 + "\n"

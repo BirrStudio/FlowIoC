@@ -7,11 +7,11 @@ using Modules.ConsentModule.Shared.Enums;
 namespace Modules.ConsentModule.Services
 {
     /// <summary>
-    /// The stand-in the module plugs itself in the Editor and in a Development Build when nothing
-    /// else is plugged. It shows nothing and answers at once from CD_Consent, so the flow after
+    /// The stand-in the module plugs itself in the Editor and in a Development Build for whichever
+    /// socket is empty. It shows nothing and answers at once from CD_Consent, so the flow after
     /// consent runs before an SDK is chosen. A release build does not have it.
     /// </summary>
-    internal class DevelopmentConsentProvider : IConsentProvider
+    internal class DevelopmentConsentProvider : IConsentProvider, ITrackingProvider
     {
         private readonly ConsentSettingsCVO _settings;
 

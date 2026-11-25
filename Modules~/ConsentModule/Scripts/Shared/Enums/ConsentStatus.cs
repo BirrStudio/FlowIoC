@@ -13,6 +13,12 @@ namespace Modules.ConsentModule.Shared.Enums
         Denied = 2,
 
         /// <summary>No consent is required where the player is; personalised ads may run.</summary>
-        NotRequired = 3
+        NotRequired = 3,
+
+        /// <summary>
+        /// The player answered an IAB TCF form (Google UMP): what they chose, purpose by purpose, is
+        /// in the TCF string the ad SDKs read themselves, so no flag is handed to them.
+        /// </summary>
+        Recorded = 4
     }
 }

@@ -7,8 +7,9 @@ using Modules.ConsentModule.Signals;
 namespace Modules.ConsentModule.RootsContexts
 {
     /// <summary>
-    /// A socket for one consent provider: the plug plugs in Setup, and Launch asks - the form,
-    /// then the tracking prompt, then the answer published - unless CD_Consent says the game asks.
+    /// Two sockets, one for the consent form and one for the tracking prompt: the plugs plug in
+    /// Setup, and Launch asks - the form, then the tracking prompt, then the answer published -
+    /// unless CD_Consent says the game asks.
     /// </summary>
     public class ConsentServiceContext : Context
     {
@@ -39,6 +40,10 @@ namespace Modules.ConsentModule.RootsContexts
             CommandBinder.Bind(_internalSignals.Plug).ToSequence<PlugProviderCommand>();
 
             CommandBinder.Bind(_internalSignals.Unplug).ToSequence<UnplugProviderCommand>();
+
+            CommandBinder.Bind(_internalSignals.PlugTracking).ToSequence<PlugTrackingProviderCommand>();
+
+            CommandBinder.Bind(_internalSignals.UnplugTracking).ToSequence<UnplugTrackingProviderCommand>();
 
             CommandBinder.Bind(_internalSignals.Launched)
                 .ToSequence<RequestOnLaunchCommand>()

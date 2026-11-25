@@ -1,0 +1,26 @@
+{
+  "name": "Modules.AttTracking",
+  "references": [
+    "FlowIoC",
+    "Modules.Consent",
+    "Modules.Consent.Shared",
+    "Unity.Advertisement.IosSupport"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "FLOWIOC_IOS_SUPPORT"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.unity.ads.ios-support",
+      "expression": "",
+      "define": "FLOWIOC_IOS_SUPPORT"
+    }
+  ],
+  "noEngineReferences": false
+}

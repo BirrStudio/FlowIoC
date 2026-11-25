@@ -25,6 +25,7 @@ namespace Modules.ConsentModule.Models
         private ConsentStatus _consent;
         private TrackingStatus _tracking;
         private bool _privacyOptionsRequired;
+        private string _purposes = string.Empty;
 
         public bool IsPostConstructed { get; set; }
 
@@ -33,6 +34,8 @@ namespace Modules.ConsentModule.Models
         public ConsentSettingsCVO Settings { get; private set; } = new();
 
         public IConsentProvider Provider { get; private set; }
+
+        public ITrackingProvider TrackingProvider { get; private set; }
 
         public bool IsAsking { get; private set; }
 
@@ -73,6 +76,10 @@ namespace Modules.ConsentModule.Models
             IsAsking = false;
         }
 
+        public void PlugTracking(ITrackingProvider provider) => TrackingProvider = provider;
+
+        public void UnplugTracking() => TrackingProvider = null;
+
         public void SetAsking(bool asking) => IsAsking = asking;
 
         public void SetConsent(ConsentStatus consent, bool privacyOptionsRequired)
@@ -85,9 +92,11 @@ namespace Modules.ConsentModule.Models
 
         public void SetTracking(TrackingStatus tracking) => _tracking = tracking;
 
+        public void SetPurposes(string purposeConsents) => _purposes = purposeConsents ?? string.Empty;
+
         public ConsentVO Publish()
         {
-            Current = new ConsentVO(_consent, _tracking, _privacyOptionsRequired);
+            Current = new ConsentVO(_consent, _tracking, _privacyOptionsRequired, _purposes);
             IsResolved = true;
 
             if (_published != null)

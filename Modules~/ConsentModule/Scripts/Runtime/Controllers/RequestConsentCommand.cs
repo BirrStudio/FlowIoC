@@ -44,6 +44,7 @@ namespace Modules.ConsentModule.Controllers
 
                     FlowLogger.Log($"Request - consent {status} from '{provider.Name}'");
                     model.SetConsent(status, privacyOptionsRequired);
+                    model.SetPurposes(ReadPurposes(provider));
                     Release();
                 });
             }
@@ -55,6 +56,23 @@ namespace Modules.ConsentModule.Controllers
                 FlowLogger.LogError($"Request - '{provider.Name}' threw on RequestConsent; consent counts as Denied: {exception.Message}");
                 model.SetConsent(ConsentStatus.Denied, false);
                 Release();
+            }
+        }
+
+        /// <summary>The TCF purposes, for a TCF form; a provider that throws reading them records none.</summary>
+        private static string ReadPurposes(IConsentProvider provider)
+        {
+            if (!(provider is ITcfConsentProvider tcf))
+                return string.Empty;
+
+            try
+            {
+                return tcf.ReadPurposeConsents() ?? string.Empty;
+            }
+            catch (Exception exception)
+            {
+                FlowLogger.LogError($"Request - '{provider.Name}' threw reading the TCF purposes; none are recorded: {exception.Message}");
+                return string.Empty;
             }
         }
     }

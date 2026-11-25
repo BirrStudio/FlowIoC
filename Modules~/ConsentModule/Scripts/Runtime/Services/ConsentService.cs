@@ -16,6 +16,8 @@ namespace Modules.ConsentModule.Services
 
         public string ProviderName => _model.Provider?.Name ?? string.Empty;
 
+        public string TrackingProviderName => _model.TrackingProvider?.Name ?? string.Empty;
+
         public void Request() => _signals.Request.Dispatch();
 
         public void ShowPrivacyOptions() => _signals.ShowPrivacyOptions.Dispatch();
@@ -23,5 +25,9 @@ namespace Modules.ConsentModule.Services
         public void Plug(IConsentProvider provider) => _signals.Plug.Dispatch(provider);
 
         public void Unplug(IConsentProvider provider) => _signals.Unplug.Dispatch(provider);
+
+        public void Plug(ITrackingProvider provider) => _signals.PlugTracking.Dispatch(provider);
+
+        public void Unplug(ITrackingProvider provider) => _signals.UnplugTracking.Dispatch(provider);
     }
 }

@@ -7,6 +7,8 @@ namespace Modules.ConsentModule.Signals
     {
         public Signal<IConsentProvider> Plug = new();
         public Signal<IConsentProvider> Unplug = new();
+        public Signal<ITrackingProvider> PlugTracking = new();
+        public Signal<ITrackingProvider> UnplugTracking = new();
         public Signal Launched = new();
         public Signal Request = new();
         public Signal ShowPrivacyOptions = new();

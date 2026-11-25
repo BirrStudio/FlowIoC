@@ -1,0 +1,25 @@
+{
+  "name": "Modules.UmpConsent",
+  "references": [
+    "FlowIoC",
+    "Modules.Consent",
+    "Modules.Consent.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "FLOWIOC_GOOGLE_UMP"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.google.ads.mobile",
+      "expression": "",
+      "define": "FLOWIOC_GOOGLE_UMP"
+    }
+  ],
+  "noEngineReferences": false
+}

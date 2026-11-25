@@ -6,7 +6,7 @@ using Modules.ConsentModule.Services;
 
 namespace Modules.ConsentModule.Controllers
 {
-    /// <summary>One provider per game: a second is refused with an error, the first stays.</summary>
+    /// <summary>One consent form provider per game: a second is refused with an error, the first stays.</summary>
     internal class PlugProviderCommand : Command
     {
         [Inject] private IConsentModel _model { get; set; }
