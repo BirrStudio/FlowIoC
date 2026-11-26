@@ -1,6 +1,6 @@
 {
   "files": {
-    "MODULE.md": "caaa5093fc5e96d26026cd0292e9553320dc2250",
+    "MODULE.md": "63ba1c172fcf5a2e96c957cb7f1a3499b16199bb",
     "MODULE.md.meta": "b10e1d4b7ff70ba7f4a6eaecdccbc4f168ea773a",
     "Modules.LocalSave.asmdef": "555296bdd98ada52996bb10b24ae2cbb2adf2740",
     "Modules.LocalSave.asmdef.meta": "f21aa8354a44ced42057235a548c68f517860b3b",
@@ -51,7 +51,7 @@
     "Scripts/Runtime/Services/ILocalSaveService.cs.meta": "91f40f99cb09e3bc2b7b64654ce779b75161d1ce",
     "Scripts/Runtime/Services/LocalSaveCipher.cs": "4b8ea29bb3802baa2637e3d0e5d05640a396f41b",
     "Scripts/Runtime/Services/LocalSaveCipher.cs.meta": "5d0d0eac771e6e031b2b096bd4726c09adc79432",
-    "Scripts/Runtime/Services/LocalSaveFile.cs": "069aecc570eb6389e8d3db3dbb6335ae0db8f643",
+    "Scripts/Runtime/Services/LocalSaveFile.cs": "8228d49d95857cffcddd2acd8eb33a2369d93555",
     "Scripts/Runtime/Services/LocalSaveFile.cs.meta": "80576a2216f3162d05bbb530495e51aa8ca32bd9",
     "Scripts/Runtime/Services/LocalSaveSerializer.cs": "9a1f279a62c1205aed30a270a223490a4e8297f4",
     "Scripts/Runtime/Services/LocalSaveSerializer.cs.meta": "66b3faeb65a264022dd4064f23f49a1864ddeecf",

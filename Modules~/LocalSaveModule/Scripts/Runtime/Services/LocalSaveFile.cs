@@ -36,10 +36,12 @@ namespace Modules.LocalSaveModule.Services
         /// </summary>
         internal string ReadText(string password)
         {
-            if (!File.Exists(Path))
+            string source = File.Exists(Path) ? Path : RecoverablePath();
+
+            if (source == null)
                 return null;
 
-            byte[] bytes = File.ReadAllBytes(Path);
+            byte[] bytes = File.ReadAllBytes(source);
 
             if (!_cipher.IsEncrypted(bytes))
                 return Encoding.UTF8.GetString(bytes);
@@ -61,10 +63,29 @@ namespace Modules.LocalSaveModule.Services
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path));
             File.WriteAllBytes(temporary, bytes);
 
+            // One rename, never a delete followed by a move: a player killed between those two
+            // steps - a swipe from the recents half a second after leaving the game is enough - was
+            // left with no save file at all, and the next start was a fresh install.
             if (File.Exists(Path))
-                File.Delete(Path);
+                File.Replace(temporary, Path, null);
+            else
+                File.Move(temporary, Path);
+        }
 
-            File.Move(temporary, Path);
+        /// <summary>
+        /// The temporary file, when it is all that is left. A build that deleted the save file before
+        /// moving the temporary one over it did so only once the temporary one was whole, so what
+        /// such a kill left behind is the newest save. An empty one is a write that never began, and
+        /// a first write killed halfway fails to parse and starts empty, as no file at all would.
+        /// </summary>
+        private string RecoverablePath()
+        {
+            string temporary = Path + TEMPORARY_SUFFIX;
+
+            if (!File.Exists(temporary) || new FileInfo(temporary).Length == 0)
+                return null;
+
+            return temporary;
         }
     }
 }
