@@ -1,6 +1,6 @@
 {
   "files": {
-    "MODULE.md": "1fd22ee9e931ccac558ed6d61950336dac64c01a",
+    "MODULE.md": "328d54aa5c5ae49a8d3cfd5e8c79876b3b1cf4cc",
     "MODULE.md.meta": "597da45a7b26ac22781a59efb4c9166baad8b294",
     "Modules.Analytics.asmdef": "508e7622d5e1274d010159e820843c55a03a757e",
     "Modules.Analytics.asmdef.meta": "8d1d7261abfcbd5e5d7e8aef39d522aabf71629c",
@@ -107,7 +107,7 @@
     "zSubModules/FacebookAnalyticsModule/Scripts/Runtime/Services/FacebookAnalyticsProvider.cs.meta": "33d1e8869449172a74c241963f2abf9e8e7a2f44",
     "zSubModules/FacebookAnalyticsModule/Scripts/Runtime/ViewsMediators.meta": "bd7cc737d30e179da9aa2f0f38b83d43dd7d40ae",
     "zSubModules/FirebaseAnalyticsModule.meta": "ab1fa631bafe4e05738559693428243ba35ee9c5",
-    "zSubModules/FirebaseAnalyticsModule/MODULE.md": "24024614a6e600de9a0653d67b522c311a24a1f4",
+    "zSubModules/FirebaseAnalyticsModule/MODULE.md": "9abec9fe44837857df3fbd752387858d218c6daa",
     "zSubModules/FirebaseAnalyticsModule/MODULE.md.meta": "d6787bafb2879277c9fa7bf2cb19efd168b5ea20",
     "zSubModules/FirebaseAnalyticsModule/Modules.FirebaseAnalytics.asmdef": "ebed0f7ba42cf96410413049930e82d097dff33f",
     "zSubModules/FirebaseAnalyticsModule/Modules.FirebaseAnalytics.asmdef.meta": "8bb5f268fbc906bcde30dc3909c2143825f8231e",
@@ -128,7 +128,7 @@
     "zSubModules/FirebaseAnalyticsModule/Scripts/Runtime/RootsContexts/FirebaseAnalyticsServiceRoot.cs": "1a6288d2ed74e6f3abd3f94f8f0fc51b05306729",
     "zSubModules/FirebaseAnalyticsModule/Scripts/Runtime/RootsContexts/FirebaseAnalyticsServiceRoot.cs.meta": "98becbbf3e1678c636c6edfd0770147f93fb2f23",
     "zSubModules/FirebaseAnalyticsModule/Scripts/Runtime/Services.meta": "e17ff94d934539d62709a64440aa11c3bd9b5f59",
-    "zSubModules/FirebaseAnalyticsModule/Scripts/Runtime/Services/FirebaseAnalyticsProvider.cs": "1491c6945e42e06034122fced9cdbbf9cc92bd4f",
+    "zSubModules/FirebaseAnalyticsModule/Scripts/Runtime/Services/FirebaseAnalyticsProvider.cs": "cddb87cf51a4f5ad8e46eff8373cc87f9283a454",
     "zSubModules/FirebaseAnalyticsModule/Scripts/Runtime/Services/FirebaseAnalyticsProvider.cs.meta": "9c1f2b1fcfda10ade79dd89c143b3fa1a7839fa3",
     "zSubModules/FirebaseAnalyticsModule/Scripts/Runtime/ViewsMediators.meta": "64042724c6be4391d27faa2df6e5d6a0f27eab73",
     "zTestModules.meta": "303e154dad977510c066543008e9f5ba02963715",

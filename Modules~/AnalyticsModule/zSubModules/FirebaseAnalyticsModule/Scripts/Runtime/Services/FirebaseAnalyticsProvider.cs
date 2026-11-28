@@ -35,9 +35,23 @@ namespace Modules.AnalyticsModule.FirebaseAnalyticsModule.Services
         // is therefore asked again after a short wait, a bounded number of times; once the other
         // check is over, the next call answers from Firebase's cached result at once. The queue in
         // the core holds the events meanwhile, and ready is called exactly once, with the outcome.
+        // The refusal is not always a faulted task: while the other check runs, the call itself can
+        // throw. That throw is turned into a faulted task so the same retry answers it, rather than
+        // escaping to the caller as a failed initialize.
         private void CheckDependencies(Action<bool> ready, int attempt)
         {
-            FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+            Task<DependencyStatus> check;
+
+            try
+            {
+                check = FirebaseApp.CheckAndFixDependenciesAsync();
+            }
+            catch (Exception exception)
+            {
+                check = Task.FromException<DependencyStatus>(exception);
+            }
+
+            check.ContinueWithOnMainThread(task =>
             {
                 if (!task.IsCompletedSuccessfully && attempt < DEPENDENCY_CHECK_ATTEMPTS)
                 {

@@ -5,6 +5,16 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Modules: Analytics 1.1.3.
+
+### Fixed
+
+- Analytics: the Firebase plug no longer fails its slot when another Firebase SDK's dependency check makes the call throw at boot; the throw is retried like a faulted check.
+
 ## [1.39.2] - 2026-11-27
 
 ### Changed

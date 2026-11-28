@@ -29,7 +29,8 @@ FirebaseAnalyticsProvider
 - **Consent one to one.** `AnalyticsConsentVO`'s four flags are Google Consent Mode's four, so
   nothing is derived here.
 - **A faulted dependency check is asked again.** Another Firebase SDK running the same check at
-  boot faults this one's; the plug retries every 0.5 s, up to 20 times, then calls `ready` once.
+  boot faults this one's, as a faulted task or a synchronous throw; the plug turns the throw into
+  a faulted task, retries every 0.5 s, up to 20 times, then calls `ready` once.
 - **Bool travels as 1 / 0.** Firebase parameters are strings, longs and doubles.
 - **No internal signal holder.** The plug has one context and one provider; the holder Create
   Module writes for every module was removed, because nothing here dispatches.
