@@ -88,7 +88,19 @@ namespace FlowIoC.Editor.Help
             set => _tab = value < 0 || value >= Tabs.Count ? 0 : value;
         }
 
-        public void Draw(HelpPainter painter) => Tabs[SelectedTab].Draw(painter);
+        public void Draw(HelpPainter painter)
+        {
+            Opened();
+            Tabs[SelectedTab].Draw(painter);
+        }
+
+        /// <summary>
+        /// Called each time the page is drawn, which is only while it is the one the reader has
+        /// open. A module page takes its NEW flag down here.
+        /// </summary>
+        protected virtual void Opened()
+        {
+        }
 
         protected abstract void DrawBody(HelpPainter painter);
     }

@@ -49,6 +49,19 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>
+        /// Takes the flag down from a module whose page the reader opened. Nothing is written
+        /// when the module carried no flag.
+        /// </summary>
+        internal void MarkSeen(string folder)
+        {
+            ModuleLibraryArrivalsEVO record = Parse(EditorPrefs.GetString(_key, string.Empty));
+            ModuleLibraryArrivalsEVO next = _rule.Seen(record, folder);
+
+            if (!ReferenceEquals(record, next))
+                EditorPrefs.SetString(_key, Serialize(next));
+        }
+
+        /// <summary>
         /// Carries the record kept under the package's name from before FlowArc became Birr Studio
         /// across to the current name, once, so the modules this reader has seen stay seen.
         /// </summary>

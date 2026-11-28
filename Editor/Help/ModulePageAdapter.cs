@@ -420,6 +420,21 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>
+        /// The reader has the page open, so the module is no longer new to them: its flag comes
+        /// down here and stays down through the versions after.
+        /// </summary>
+        protected override void Opened()
+        {
+            ReadingsEVO readings = Readings();
+
+            if (!readings.IsNew)
+                return;
+
+            _arrivals.MarkSeen(_page.ModuleFolderName);
+            readings.IsNew = false;
+        }
+
+        /// <summary>
         /// Whatever the page has to say about itself, under whatever this adapter has to say
         /// about whether it can be installed at all.
         /// </summary>

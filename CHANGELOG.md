@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Analytics: the Firebase plug no longer fails its slot when another Firebase SDK's dependency check makes the call throw at boot; the throw is retried like a faulted check.
+- Help: a module's NEW flag in the Module Library no longer disappears with the next patch release; it stays until the module's page is opened.
 
 ## [1.39.2] - 2026-11-27
 
